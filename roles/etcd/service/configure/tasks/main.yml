@@ -1,0 +1,25 @@
+---
+
+- set_fact:
+    initial_advertise_peer_urls: "https://{{ ansible_default_ipv4.address }}:2380"
+    listen_peer_urls: "https://{{ ansible_default_ipv4.address }}:2380"
+    listen_client_urls: "https://{{ ansible_default_ipv4.address }}:2379,http://127.0.0.1:2379"
+    advertise_client_urls: "https://{{ ansible_default_ipv4.address }}:2379"
+
+- set_fact:
+    initial_cluster: >-
+      {{ (initial_cluster | d([])) + ['%s=https://%s:2380' | format(item.0, item.1)] }}
+  loop: >-
+    {{ etcd_hosts | zip(etcd_ipv4s) | list }}
+
+- set_fact:
+    initial_cluster: "{{ initial_cluster | join(',') }}"
+
+- name: generate etcd yaml config
+  template:
+    dest: /etc/etcd/etcd.yml
+    src: etc/etcd/etcd.yml.j2
+  notify:
+    - restart etcd
+
+# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,0 +1,48 @@
+---
+
+- name: initialize kubernetes cluster
+  shell: |
+    kubeadm init --config=/etc/kubernetes/kubeadm.yml
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- stat:
+    path: /etc/kubernetes/kube-flannel.yml
+  register: result
+
+- block:
+
+  - name: download flannel manifest
+    get_url:
+      url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      dest: &flannel_yml /etc/kubernetes/kube-flannel.yml
+
+  - name: deploy flannel network
+    k8s:
+      src: *flannel_yml
+      namespace: kube-system
+      kubeconfig: /etc/kubernetes/admin.conf
+
+  when: not result.stat.exists
+
+- name: create compute bootstrap token
+  shell: |
+    kubeadm token create \
+      --ttl=0 \
+      --groups="system:bootstrappers:kubeadm:default-node-token" \
+    >/etc/kubernetes/TOKEN
+  args:
+    creates: /etc/kubernetes/TOKEN
+
+- name: reconstruct bootstrap hash
+  shell: |
+    openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
+    | openssl rsa -pubin -outform der \
+    | openssl dgst -sha256 -hex \
+    | grep stdin \
+    | awk '{print$2}' \
+    >/etc/kubernetes/HASH
+  args:
+    creates: /etc/kubernetes/HASH
+
+# vim:ts=2:sw=2:et:syn=yaml:

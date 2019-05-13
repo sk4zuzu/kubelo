@@ -1,0 +1,56 @@
+---
+apiVersion: kubeadm.k8s.io/v1alpha3
+kind: InitConfiguration
+apiEndpoint:
+  advertisedAddress: {{ ansible_default_ipv4.address }}
+  bindPort: 6443
+nodeRegistration:
+  name: {{ ansible_fqdn }}
+{% if cloud_provider | d() %}
+  kubeletExtraArgs:
+    cloud-provider: {{ cloud_provider }}
+{% endif %}
+
+---
+apiVersion: kubeadm.k8s.io/v1alpha3
+kind: ClusterConfiguration
+clusterName: {{ cluster_name }}
+controlPlaneEndpoint: local-lb:7878
+apiServerCertSANs: {{ (extra_server_cert_sans + api_server_cert_sans) | unique | to_json }}
+etcd:
+  external:
+    endpoints: {{ etcd_external_endpoints | to_json }}
+    caFile: /etc/etcd/pki/crt/etcd-ca.crt
+    certFile: /etc/etcd/pki/crt/etcd.crt
+    keyFile: /etc/etcd/pki/key/etcd.key
+networking:
+  podSubnet: 10.244.0.0/16
+certificatesDir: /etc/kubernetes/pki/
+{% if cloud_provider | d() %}
+apiServerExtraArgs:
+  cloud-provider: {{ cloud_provider }}
+{% endif %}
+controllerManagerExtraArgs:
+{% if cloud_provider | d() %}
+  cloud-provider: {{ cloud_provider }}
+{% endif %}
+  address: 0.0.0.0
+schedulerExtraArgs:
+  address: 0.0.0.0
+
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+systemReserved:
+  memory: "250Mi"
+kubeReserved:
+  memory: "250Mi"
+authentication:
+  webhook:
+    enabled: true
+  anonymous:
+    enables: false
+authorization:
+  mode: Webhook
+
+# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,0 +1,55 @@
+---
+
+- hosts: [bastion]
+  roles:
+    - role: bastion/openssh/configure
+      delegate_to: localhost
+
+- hosts: [etcd, master, compute]
+  roles:
+    - role: python3/package/install
+
+- hosts: [etcd, master, compute]
+  gather_facts: true
+  gather_subset: [network]
+  roles:
+    - role: network/gather
+
+- hosts: [master, compute]
+  roles:
+    - role: haproxy/service/install
+    - role: haproxy/service/configure
+    - role: dockerce/service/install
+
+- hosts: [etcd]
+  roles:
+    - role: etcd/openssl/bootstrap
+      when: inventory_hostname == (groups.etcd | first)
+      run_once: true
+    - role: etcd/openssl/replicate
+    - role: etcd/service/install
+    - role: etcd/service/configure
+
+- hosts: [master]
+  roles:
+    - role: master/kubeadm/install
+    - role: master/kubeadm/configure
+    - role: master/kubeadm/bootstrap
+      when: inventory_hostname == (groups.master | first)
+      run_once: true
+    - role: master/kubeadm/replicate
+
+- hosts: [compute]
+  roles:
+    - role: compute/kubeadm/install
+    - role: compute/kubeadm/replicate
+    - role: compute/kubeadm/configure
+
+- hosts: [master]
+  roles:
+    - role: master/helm/install
+    - role: master/tiller/bootstrap
+      when: inventory_hostname == (groups.master | first)
+      run_once: true
+
+# vim:ts=2:sw=2:et:syn=yaml:

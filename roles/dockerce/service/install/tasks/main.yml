@@ -1,0 +1,26 @@
+---
+
+- name: import docker-ce repository gpg key
+  apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
+
+- name: add docker-ce repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+
+- set_fact:
+    dockerce_version_apt: >-
+      {{ dockerce_version_apt | d('18.06.0~ce~3-0~ubuntu') }}
+
+- name: install docker-ce
+  apt:
+    name: docker-ce={{ dockerce_version_apt }}
+    state: present
+  register: result
+  until: result is success
+  retries: 20
+  delay: 12
+
+# vim:ts=2:sw=2:et:syn=yaml:

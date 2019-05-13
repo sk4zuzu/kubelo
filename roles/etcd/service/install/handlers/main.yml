@@ -1,0 +1,9 @@
+---
+
+- name: restart etcd
+  systemd:
+    name: etcd
+    enabled: true
+    state: restarted
+
+# vim:ts=2:sw=2:et:syn=yaml:

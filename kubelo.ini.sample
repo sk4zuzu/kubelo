@@ -1,0 +1,27 @@
+
+[all:vars]
+cluster_name=k1
+ansible_user=ubuntu
+cloud_provider=
+
+[bastion]
+vpc1u ansible_host=10.69.0.10
+
+[etcd]
+k1m1
+k1m2
+k1m3
+
+[master]
+k1m1
+k1m2
+k1m3
+
+[compute]
+k1c1
+k1c2
+k1c3 node_labels=label2=true
+k1c4
+k1c5 node_labels=label1=true,label2=false
+
+# vim:ts=4:sw=4:et:syn=dosini:

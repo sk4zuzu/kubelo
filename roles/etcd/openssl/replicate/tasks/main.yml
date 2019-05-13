@@ -1,0 +1,35 @@
+---
+
+- name: ensure local cache directory
+  file:
+    path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
+    state: directory
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: pull etcd pki to local cache
+  synchronize:
+    mode: pull
+    src: /etc/etcd/
+    dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
+    checksum: true
+    use_ssh_args: true
+    rsync_opts: &rsync_opts
+      - --include=pki/***
+      - --exclude=*
+  when: inventory_hostname == (groups.etcd | first)
+  changed_when: false
+  run_once: true
+
+- name: push etcd pki from local cache
+  synchronize:
+    mode: push
+    src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
+    dest: /etc/etcd/
+    checksum: true
+    use_ssh_args: true
+    rsync_opts: *rsync_opts
+  when: inventory_hostname != (groups.etcd | first)
+
+# vim:ts=2:sw=2:et:syn=yaml:

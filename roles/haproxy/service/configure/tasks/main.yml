@@ -1,0 +1,21 @@
+---
+
+- set_fact:
+    backend_servers: >-
+      {{ master_hosts | zip(master_ipv4s) | list }}
+
+- name: render haproxy config
+  template:
+    dest: /etc/haproxy/haproxy.cfg
+    src: etc/haproxy/haproxy.cfg.j2
+  notify:
+    - restart haproxy
+
+- name: update /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: " local-lb$"
+    line: >-
+      127.0.0.1 local-lb
+
+# vim:ts=2:sw=2:et:syn=yaml:

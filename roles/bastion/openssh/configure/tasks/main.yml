@@ -1,0 +1,24 @@
+---
+
+- name: create local .ssh directory tree
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: u+rwx,g=rx,o=
+  loop:
+   - "{{ playbook_dir }}/.ssh"
+   - "{{ playbook_dir }}/.ssh/config.d"
+
+- name: generate bastion ssh main config
+  template:
+    dest: "{{ playbook_dir }}/.ssh/config"
+    src: sshconfig.j2
+    mode: u=rw,g=r,o=
+
+- name: generate bastion ssh cluster config
+  template:
+    dest: "{{ playbook_dir }}/.ssh/config.d/{{ cluster_name }}"
+    src: config.d/sshconfig.j2
+    mode: u=rw,g=r,o=
+
+# vim:ts=2:sw=2:et:syn=yaml:

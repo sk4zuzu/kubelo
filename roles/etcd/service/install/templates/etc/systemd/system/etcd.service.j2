@@ -1,0 +1,14 @@
+
+[Unit]
+Description=etcd
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/etcd --config-file /etc/etcd/etcd.yml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+# vim:ts=4:sw=4:et:syn=systemd:

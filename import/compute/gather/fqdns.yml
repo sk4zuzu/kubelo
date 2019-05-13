@@ -1,0 +1,10 @@
+---
+
+- name: gather compute fqdn addresses
+  set_fact:
+    compute_fqdns: >-
+      {{ groups.compute
+      | map('extract', hostvars, ['ansible_fqdn'])
+      | list }}
+
+# vim:ts=2:sw=2:et:syn=yaml:

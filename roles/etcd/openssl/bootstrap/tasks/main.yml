@@ -1,0 +1,132 @@
+---
+
+- set_fact:
+    etcd_master_fqdns: >-
+      {{ (etcd_fqdns + master_fqdns) | unique | list }}
+    etcd_master_ipv4s: >-
+      {{ (etcd_ipv4s + master_ipv4s) | unique | list }}
+
+- set_fact:
+    subject_alt_name: >-
+      {{ ((groups.etcd + groups.master)
+      | unique
+      | map('extract', hostvars, 'inventory_hostname')
+      | map('regex_replace', '^', 'DNS:')
+      | list)
+      + (etcd_master_fqdns
+      | map('regex_replace', '^', 'DNS:')
+      | list)
+      + (etcd_master_ipv4s
+      | map('regex_replace', '^', 'IP:')
+      | list) }}
+
+- file:
+    path: "{{ item }}/"
+    state: directory
+  loop:
+    - /etc/etcd
+    - /etc/etcd/pki
+    - /etc/etcd/pki/key
+    - /etc/etcd/pki/csr
+    - /etc/etcd/pki/crt
+
+- name: generate etcd-ca private key
+  openssl_privatekey:
+    path: /etc/etcd/pki/key/etcd-ca.key
+    type: RSA
+
+- stat:
+    path: /etc/etcd/pki/csr/etcd-ca.csr
+  register: etcd_ca_csr
+
+- name: generate etcd-ca certificate signing request
+  openssl_csr:
+    path: /etc/etcd/pki/csr/etcd-ca.csr
+    privatekey_path: /etc/etcd/pki/key/etcd-ca.key
+    basic_constraints:
+      - critical
+      - "CA:TRUE"
+    key_usage:
+      - critical
+      - digitalSignature
+      - keyEncipherment
+      - keyCertSign
+    common_name: etcd-ca
+  when: not etcd_ca_csr.stat.exists
+
+- name: generate self-signed etcd-ca certificate
+  openssl_certificate:
+    path: /etc/etcd/pki/crt/etcd-ca.crt
+    privatekey_path: /etc/etcd/pki/key/etcd-ca.key
+    csr_path: /etc/etcd/pki/csr/etcd-ca.csr
+    provider: selfsigned
+
+- name: generate etcd private key
+  openssl_privatekey:
+    path: /etc/etcd/pki/key/etcd.key
+    type: RSA
+
+- stat:
+    path: /etc/etcd/pki/csr/etcd.csr
+  register: etcd_csr
+
+- name: generate etcd certificate signing request
+  openssl_csr:
+    path: /etc/etcd/pki/csr/etcd.csr
+    privatekey_path: /etc/etcd/pki/key/etcd.key
+    basic_constraints:
+      - "CA:FALSE"
+    key_usage:
+      - critical
+      - digitalSignature
+      - keyEncipherment
+    extended_key_usage:
+      - serverAuth
+      - clientAuth
+    subject_alt_name: "{{ subject_alt_name }}"
+    common_name: etcd
+  when: not etcd_csr.stat.exists
+
+- name: generate signed etcd certificate
+  openssl_certificate:
+    path: /etc/etcd/pki/crt/etcd.crt
+    csr_path: /etc/etcd/pki/csr/etcd.csr
+    ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
+    ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
+    provider: ownca
+
+- name: generate etcd-peer private key
+  openssl_privatekey:
+    path: /etc/etcd/pki/key/etcd-peer.key
+    type: RSA
+
+- stat:
+    path: /etc/etcd/pki/csr/etcd-peer.csr
+  register: etcd_peer_csr
+
+- name: generate etcd-peer certificate signing request
+  openssl_csr:
+    path: /etc/etcd/pki/csr/etcd-peer.csr
+    privatekey_path: /etc/etcd/pki/key/etcd-peer.key
+    basic_constraints:
+      - "CA:FALSE"
+    key_usage:
+      - critical
+      - digitalSignature
+      - keyEncipherment
+    extended_key_usage:
+      - serverAuth
+      - clientAuth
+    subject_alt_name: "{{ subject_alt_name }}"
+    common_name: etcd-peer
+  when: not etcd_peer_csr.stat.exists
+
+- name: generate signed etcd-peer certificate
+  openssl_certificate:
+    path: /etc/etcd/pki/crt/etcd-peer.crt
+    csr_path: /etc/etcd/pki/csr/etcd-peer.csr
+    ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
+    ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
+    provider: ownca
+
+# vim:ts=2:sw=2:et:syn=yaml:

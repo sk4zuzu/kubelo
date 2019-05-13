@@ -1,0 +1,10 @@
+---
+
+- name: gather master fqdn addresses
+  set_fact:
+    master_fqdns: >-
+      {{ groups.master
+      | map('extract', hostvars, ['ansible_fqdn'])
+      | list }}
+
+# vim:ts=2:sw=2:et:syn=yaml:

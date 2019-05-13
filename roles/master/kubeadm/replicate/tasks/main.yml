@@ -1,0 +1,49 @@
+---
+
+- name: ensure local cache directory
+  file:
+    path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
+    state: directory
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: pull kubernetes pki to local cache
+  synchronize:
+    mode: pull
+    src: /etc/kubernetes/
+    dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
+    checksum: true
+    use_ssh_args: true
+    rsync_opts: &rsync_opts
+      - --include=pki/***
+      - --include=kube-flannel.yml
+      - --include=TOKEN
+      - --include=HASH
+      - --exclude=*
+  when: inventory_hostname == (groups.master | first)
+  changed_when: false
+  run_once: true
+
+- name: push kubernetes pki from local cache
+  synchronize:
+    mode: push
+    src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
+    dest: /etc/kubernetes/
+    checksum: true
+    use_ssh_args: true
+    rsync_opts: *rsync_opts
+
+- name: extends kuberentes control plane
+  shell: |
+    kubeadm join \
+      --node-name={{ ansible_fqdn }} \
+      --token=$(head -n1 /etc/kubernetes/TOKEN) \
+      --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
+      --experimental-control-plane \
+      local-lb:7878
+  args:
+    creates: /etc/kubernetes/kubelet.conf
+  when: inventory_hostname != (groups.master | first)
+
+# vim:ts=2:sw=2:et:syn=yaml:

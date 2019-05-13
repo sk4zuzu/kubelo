@@ -1,0 +1,24 @@
+---
+
+- set_fact:
+    etcd_external_endpoints: >-
+      {{ (etcd_external_endpoints | d([])) + ['https://%s:2379' | format(item)] }}
+  loop: >-
+    {{ etcd_fqdns }}
+
+- set_fact:
+    cloud_provider: "{{ cloud_provider | d('') }}"
+    extra_server_cert_sans: "{{ extra_server_cert_sans | d([]) }}"
+    api_server_cert_sans: "{{ master_fqdns }}"
+
+- name: render kubeadm config
+  template:
+    dest: /etc/kubernetes/kubeadm.yml
+    src: etc/kubernetes/kubeadm.yml.j2
+
+- name: render profile config
+  template:
+    dest: /etc/profile.d/kubeconfig.sh
+    src: etc/profile.d/kubeconfig.sh.j2
+
+# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,0 +1,10 @@
+---
+
+- name: gather etcd fqdn addresses
+  set_fact:
+    etcd_fqdns: >-
+      {{ groups.etcd
+      | map('extract', hostvars, ['ansible_fqdn'])
+      | list }}
+
+# vim:ts=2:sw=2:et:syn=yaml:

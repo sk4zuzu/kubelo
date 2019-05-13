@@ -1,0 +1,29 @@
+---
+
+name: {{ inventory_hostname_short }}
+
+client-transport-security:
+  cert-file: /etc/etcd/pki/crt/etcd.crt
+  key-file: /etc/etcd/pki/key/etcd.key
+  client-cert-auth: true
+  trusted-ca-file: /etc/etcd/pki/crt/etcd-ca.crt
+  auto-tls: false
+
+peer-transport-security:
+  cert-file: /etc/etcd/pki/crt/etcd-peer.crt
+  key-file: /etc/etcd/pki/key/etcd-peer.key
+  client-cert-auth: true
+  trusted-ca-file: /etc/etcd/pki/crt/etcd-ca.crt
+  auto-tls: false
+
+initial-advertise-peer-urls: {{ initial_advertise_peer_urls }}
+listen-peer-urls: {{ listen_peer_urls }}
+listen-client-urls: {{ listen_client_urls }}
+advertise-client-urls: {{ advertise_client_urls }}
+
+initial-cluster-token: kubelo
+initial-cluster: {{ initial_cluster }}
+
+data-dir: /var/lib/etcd
+
+# vim:ts=2:sw=2:et:syn=yaml:

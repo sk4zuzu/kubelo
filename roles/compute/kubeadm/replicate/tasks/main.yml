@@ -1,0 +1,15 @@
+---
+
+- name: push token/hash from local cache
+  synchronize:
+    mode: push
+    src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
+    dest: /etc/kubernetes/
+    checksum: true
+    use_ssh_args: true
+    rsync_opts:
+      - --include=TOKEN
+      - --include=HASH
+      - --exclude=*
+
+# vim:ts=2:sw=2:et:syn=yaml:
