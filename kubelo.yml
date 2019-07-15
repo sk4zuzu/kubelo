@@ -4,6 +4,7 @@
   roles:
     - role: bastion/openssh/configure
       delegate_to: localhost
+      become: false
 
 - hosts: [etcd, master, compute]
   roles:
