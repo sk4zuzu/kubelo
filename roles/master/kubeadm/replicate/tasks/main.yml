@@ -6,6 +6,7 @@
     state: directory
   changed_when: false
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: pull kubernetes pki to local cache
