@@ -44,10 +44,8 @@
     path: /etc/etcd/pki/csr/etcd-ca.csr
     privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     basic_constraints:
-      - critical
       - "CA:TRUE"
     key_usage:
-      - critical
       - digitalSignature
       - keyEncipherment
       - keyCertSign
@@ -77,7 +75,6 @@
     basic_constraints:
       - "CA:FALSE"
     key_usage:
-      - critical
       - digitalSignature
       - keyEncipherment
     extended_key_usage:
@@ -111,7 +108,6 @@
     basic_constraints:
       - "CA:FALSE"
     key_usage:
-      - critical
       - digitalSignature
       - keyEncipherment
     extended_key_usage:
