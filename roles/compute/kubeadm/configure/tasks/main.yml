@@ -45,6 +45,8 @@
       --token=$(head -n1 /etc/kubernetes/TOKEN) \
       --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
       local-lb:7878
+  notify:
+    - restart kubelet
   args:
     creates: /etc/kubernetes/kubelet.conf
 

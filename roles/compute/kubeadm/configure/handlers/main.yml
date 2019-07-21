@@ -1,0 +1,9 @@
+---
+
+- name: restart kubelet
+  systemd:
+    name: kubelet
+    enabled: true
+    state: restarted
+
+# vim:ts=2:sw=2:et:syn=yaml:
