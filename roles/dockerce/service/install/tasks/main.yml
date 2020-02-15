@@ -12,11 +12,16 @@
 
 - set_fact:
     dockerce_version_apt: >-
-      {{ dockerce_version_apt | d('18.06.0~ce~3-0~ubuntu') }}
+      {{ dockerce_version_apt | d('5:18.09.9~3-0~ubuntu-bionic') }}
+    containerdio_version_apt: >-
+      {{ containerdio_version_apt | d('1.2.10-3') }}
 
 - name: install docker-ce
   apt:
-    name: docker-ce={{ dockerce_version_apt }}
+    name:
+      - "docker-ce={{ dockerce_version_apt }}"
+      - "docker-ce-cli={{ dockerce_version_apt }}"
+      - "containerd.io={{ containerdio_version_apt }}"
     state: present
   register: result
   until: result is success
