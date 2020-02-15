@@ -1,14 +1,37 @@
 ---
 
-- name: initialize kubernetes cluster
-  shell: |
-    kubeadm init --config=/etc/kubernetes/kubeadm.yml
-  args:
-    creates: /etc/kubernetes/admin.conf
+- stat:
+    path: /etc/kubernetes/admin.conf
+  register: admin_conf
+
+- block:
+
+  - name: initialize kubernetes cluster
+    shell: |
+      kubeadm init \
+        --config=/etc/kubernetes/kubeadm.yml
+
+  - name: create compute bootstrap token
+    shell: |
+      kubeadm token create \
+        --ttl=0 \
+        --groups="system:bootstrappers:kubeadm:default-node-token" \
+      >/etc/kubernetes/TOKEN
+
+  - name: reconstruct bootstrap hash
+    shell: |
+      openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
+      | openssl rsa -pubin -outform der \
+      | openssl dgst -sha256 -hex \
+      | grep stdin \
+      | awk '{print$2}' \
+      >/etc/kubernetes/HASH
+
+  when: not admin_conf.stat.exists
 
 - stat:
     path: /etc/kubernetes/kube-flannel.yml
-  register: result
+  register: kube_flannel_yml
 
 - block:
 
@@ -23,26 +46,6 @@
       namespace: kube-system
       kubeconfig: /etc/kubernetes/admin.conf
 
-  when: not result.stat.exists
-
-- name: create compute bootstrap token
-  shell: |
-    kubeadm token create \
-      --ttl=0 \
-      --groups="system:bootstrappers:kubeadm:default-node-token" \
-    >/etc/kubernetes/TOKEN
-  args:
-    creates: /etc/kubernetes/TOKEN
-
-- name: reconstruct bootstrap hash
-  shell: |
-    openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
-    | openssl rsa -pubin -outform der \
-    | openssl dgst -sha256 -hex \
-    | grep stdin \
-    | awk '{print$2}' \
-    >/etc/kubernetes/HASH
-  args:
-    creates: /etc/kubernetes/HASH
+  when: not kube_flannel_yml.stat.exists
 
 # vim:ts=2:sw=2:et:syn=yaml:

@@ -3,11 +3,14 @@
 - name: ensure local cache directory
   file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
-    state: directory
+    state: "{{ item }}"
   changed_when: false
   delegate_to: localhost
   become: false
   run_once: true
+  loop:
+    - absent
+    - directory
 
 - name: pull kubernetes pki to local cache
   synchronize:
@@ -17,10 +20,16 @@
     checksum: true
     use_ssh_args: true
     rsync_opts: &rsync_opts
-      - --include=pki/***
-      - --include=kube-flannel.yml
-      - --include=TOKEN
       - --include=HASH
+      - --include=TOKEN
+      - --include=kube-flannel.yml
+      - --include=pki/
+      - --include=pki/ca.crt
+      - --include=pki/ca.key
+      - --include=pki/sa.key
+      - --include=pki/sa.pub
+      - --include=pki/front-proxy-ca.crt
+      - --include=pki/front-proxy-ca.key
       - --exclude=*
   when: inventory_hostname == (groups.master | first)
   changed_when: false
@@ -35,7 +44,7 @@
     use_ssh_args: true
     rsync_opts: *rsync_opts
 
-- name: extends kuberentes control plane
+- name: extend kuberentes control plane
   shell: |
     kubeadm join \
       --node-name={{ ansible_fqdn }} \
