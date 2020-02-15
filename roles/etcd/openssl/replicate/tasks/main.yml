@@ -3,11 +3,14 @@
 - name: ensure local cache directory
   file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
-    state: directory
+    state: "{{ item }}"
   changed_when: false
   delegate_to: localhost
   become: false
   run_once: true
+  loop:
+    - absent
+    - directory
 
 - name: pull etcd pki to local cache
   synchronize:
