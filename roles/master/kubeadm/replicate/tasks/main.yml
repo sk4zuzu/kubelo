@@ -41,6 +41,7 @@
     src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
     dest: /etc/kubernetes/
     checksum: true
+    times: false
     use_ssh_args: true
     rsync_opts: *rsync_opts
 
