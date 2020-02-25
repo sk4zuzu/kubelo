@@ -1,42 +1,38 @@
 ---
 
-- block:
+- when: cloud_provider | d()
+  block:
+    - lineinfile:
+        path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: "KUBELET_KUBECONFIG_ARGS=.*--cloud-provider=[^ ]+ "
+        state: absent
+      register: cloud_provider_result
+      changed_when: false
+      check_mode: true
 
-  - lineinfile:
-      path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      regexp: "KUBELET_KUBECONFIG_ARGS=.*--cloud-provider=[^ ]+ "
-      state: absent
-    register: cloud_provider_result
-    changed_when: false
-    check_mode: true
+    - name: enable cloud provider
+      replace:
+        dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: "KUBELET_KUBECONFIG_ARGS="
+        replace: "KUBELET_KUBECONFIG_ARGS=--cloud-provider={{ cloud_provider }} "
+      when: not cloud_provider_result.changed
 
-  - name: enable cloud provider
-    replace:
-      dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      regexp: "KUBELET_KUBECONFIG_ARGS="
-      replace: "KUBELET_KUBECONFIG_ARGS=--cloud-provider={{ cloud_provider }} "
-    when: not cloud_provider_result.changed
+- when: node_labels | d()
+  block:
+    - lineinfile:
+        path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: "KUBELET_KUBECONFIG_ARGS=.*--node-labels=[^ ]+ "
+        state: absent
+      register: node_labels_result
+      changed_when: false
+      check_mode: true
 
-  when: cloud_provider | d()
-
-- block:
-
-  - lineinfile:
-      path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      regexp: "KUBELET_KUBECONFIG_ARGS=.*--node-labels=[^ ]+ "
-      state: absent
-    register: node_labels_result
-    changed_when: false
-    check_mode: true
-
-  - name: enable node labels
-    replace:
-      dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      regexp: "KUBELET_KUBECONFIG_ARGS="
-      replace: "KUBELET_KUBECONFIG_ARGS=--node-labels={{ node_labels }} "
-    when: not node_labels_result.changed
-
-  when: node_labels | d()
+    - name: enable node labels
+      replace:
+        dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: "KUBELET_KUBECONFIG_ARGS="
+        replace: "KUBELET_KUBECONFIG_ARGS=--node-labels={{ node_labels }} "
+      when: not node_labels_result.changed
 
 - name: initialize compute nodes
   shell: |

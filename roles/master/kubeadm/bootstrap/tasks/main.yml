@@ -4,48 +4,44 @@
     path: /etc/kubernetes/admin.conf
   register: admin_conf
 
-- block:
+- when: not admin_conf.stat.exists
+  block:
+    - name: initialize kubernetes cluster
+      shell: |
+        kubeadm init \
+          --config=/etc/kubernetes/kubeadm.yml
 
-  - name: initialize kubernetes cluster
-    shell: |
-      kubeadm init \
-        --config=/etc/kubernetes/kubeadm.yml
+    - name: create compute bootstrap token
+      shell: |
+        kubeadm token create \
+          --ttl=0 \
+          --groups="system:bootstrappers:kubeadm:default-node-token" \
+        >/etc/kubernetes/TOKEN
 
-  - name: create compute bootstrap token
-    shell: |
-      kubeadm token create \
-        --ttl=0 \
-        --groups="system:bootstrappers:kubeadm:default-node-token" \
-      >/etc/kubernetes/TOKEN
-
-  - name: reconstruct bootstrap hash
-    shell: |
-      openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
-      | openssl rsa -pubin -outform der \
-      | openssl dgst -sha256 -hex \
-      | grep stdin \
-      | awk '{print$2}' \
-      >/etc/kubernetes/HASH
-
-  when: not admin_conf.stat.exists
+    - name: reconstruct bootstrap hash
+      shell: |
+        openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
+        | openssl rsa -pubin -outform der \
+        | openssl dgst -sha256 -hex \
+        | grep stdin \
+        | awk '{print$2}' \
+        >/etc/kubernetes/HASH
 
 - stat:
     path: /etc/kubernetes/kube-flannel.yml
   register: kube_flannel_yml
 
-- block:
+- when: not kube_flannel_yml.stat.exists
+  block:
+    - name: download flannel manifest
+      get_url:
+        url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+        dest: &flannel_yml /etc/kubernetes/kube-flannel.yml
 
-  - name: download flannel manifest
-    get_url:
-      url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-      dest: &flannel_yml /etc/kubernetes/kube-flannel.yml
-
-  - name: deploy flannel network
-    k8s:
-      src: *flannel_yml
-      namespace: kube-system
-      kubeconfig: /etc/kubernetes/admin.conf
-
-  when: not kube_flannel_yml.stat.exists
+    - name: deploy flannel network
+      k8s:
+        src: *flannel_yml
+        namespace: kube-system
+        kubeconfig: /etc/kubernetes/admin.conf
 
 # vim:ts=2:sw=2:et:syn=yaml:
