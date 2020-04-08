@@ -20,7 +20,7 @@
         kubernetes_cni_version: >-
           {{ kubernetes_cni_version | d('0.7.5') }}
         helm_version: >-
-          {{ helm_version | d('2.16.3') }}
+          {{ helm_version | d('3.1.2') }}
 
 - hosts: [etcd, master, compute]
   roles:
@@ -65,8 +65,5 @@
 - hosts: [master]
   roles:
     - role: master/helm/install
-    - role: master/tiller/bootstrap
-      when: inventory_hostname == (groups.master | first)
-      run_once: true
 
 # vim:ts=2:sw=2:et:syn=yaml:
