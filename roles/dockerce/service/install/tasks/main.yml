@@ -10,12 +10,6 @@
     repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
     state: present
 
-- set_fact:
-    dockerce_version_apt: >-
-      {{ dockerce_version_apt | d('5:18.09.9~3-0~ubuntu-bionic') }}
-    containerdio_version_apt: >-
-      {{ containerdio_version_apt | d('1.2.10-3') }}
-
 - name: install docker-ce
   apt:
     name:

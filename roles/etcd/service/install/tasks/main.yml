@@ -1,8 +1,5 @@
 ---
 
-- set_fact:
-    etcd_version: "{{ etcd_version | d('3.3.13') }}"
-
 - name: download etcd binary package
   get_url:
     dest: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"

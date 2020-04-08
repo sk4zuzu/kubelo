@@ -1,9 +1,5 @@
 ---
 
-- set_fact:
-    helm_version: >-
-      {{ helm_version | d('2.16.3') }}
-
 - name: download helm binary package
   get_url:
     url: "https://storage.googleapis.com/kubernetes-helm/helm-v{{ helm_version }}-linux-amd64.tar.gz"
