@@ -1,5 +1,14 @@
 ---
 
+- assert:
+    that: bastion_inventory_hostname not in forbidden_inventory_hostnames
+    fail_msg: "bastion must not be a part of the cluster"
+  vars:
+    bastion_inventory_hostname: >-
+      {{ groups.bastion | first }}
+    forbidden_inventory_hostnames: >-
+      {{ (groups.etcd + groups.master + groups.compute) | unique }}
+
 - name: create local .ssh directory tree
   file:
     path: "{{ item }}"
