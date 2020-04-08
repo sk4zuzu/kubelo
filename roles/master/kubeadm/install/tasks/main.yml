@@ -31,6 +31,10 @@
   shell: |
     kubeadm config images pull \
       --kubernetes-version=v{{ kubernetes_version }}
+  register: kubeadm_config_image_pull
+  until: kubeadm_config_image_pull is success
+  retries: 20
+  delay: 12
   changed_when: false
 
 # vim:ts=2:sw=2:et:syn=yaml:
