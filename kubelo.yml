@@ -14,9 +14,9 @@
         containerdio_version_apt: >-
           {{ containerdio_version_apt | d('1.2.10-3') }}
         etcd_version: >-
-          {{ etcd_version | d('3.3.13') }}
+          {{ etcd_version | d('3.4.3') }}
         kubernetes_version: >-
-          {{ kubernetes_version | d('1.14.6') }}
+          {{ kubernetes_version | d('1.17.4') }}
         kubernetes_cni_version: >-
           {{ kubernetes_cni_version | d('0.7.5') }}
         helm_version: >-

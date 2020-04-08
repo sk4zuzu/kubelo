@@ -51,7 +51,7 @@
       --node-name={{ ansible_fqdn }} \
       --token=$(head -n1 /etc/kubernetes/TOKEN) \
       --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
-      --experimental-control-plane \
+      --control-plane \
       local-lb:7878
   args:
     creates: /etc/kubernetes/kubelet.conf
