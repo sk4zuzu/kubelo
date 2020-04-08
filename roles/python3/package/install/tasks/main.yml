@@ -4,9 +4,9 @@
   script: "{{ playbook_dir }}/roles/python3/package/install/templates/python3.sh"
   args:
     executable: /bin/bash
-    creates: /usr/bin/python3
+    creates: /usr/bin/pip3
   register: result
-  until: result.rc | d(0) == 0
+  until: result is success
   retries: 20
   delay: 12
 
