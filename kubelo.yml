@@ -1,12 +1,12 @@
 ---
 
-- hosts: [bastion]
+- hosts: bastion
   roles:
     - role: bastion/openssh/configure
       delegate_to: localhost
       become: false
 
-- hosts: [all]
+- hosts: all
   pre_tasks:
     - set_fact:
         dockerce_version_apt: >-
@@ -22,23 +22,23 @@
         helm_version: >-
           {{ helm_version | d('3.1.2') }}
 
-- hosts: [etcd, master, compute]
+- hosts: etcd:master:compute
   roles:
     - role: python3/package/install
 
-- hosts: [etcd, master, compute]
+- hosts: etcd:master:compute
   gather_facts: true
   gather_subset: [network]
   roles:
     - role: network/gather
 
-- hosts: [master, compute]
+- hosts: master:compute
   roles:
     - role: haproxy/service/install
     - role: haproxy/service/configure
     - role: dockerce/service/install
 
-- hosts: [etcd]
+- hosts: etcd
   roles:
     - role: etcd/openssl/bootstrap
       when: inventory_hostname == (groups.etcd | first)
@@ -47,7 +47,7 @@
     - role: etcd/service/install
     - role: etcd/service/configure
 
-- hosts: [master]
+- hosts: master
   roles:
     - role: master/kubeadm/install
     - role: master/kubeadm/configure
@@ -56,13 +56,13 @@
       run_once: true
     - role: master/kubeadm/replicate
 
-- hosts: [compute]
+- hosts: compute
   roles:
     - role: compute/kubeadm/install
     - role: compute/kubeadm/replicate
     - role: compute/kubeadm/configure
 
-- hosts: [master]
+- hosts: master
   roles:
     - role: master/helm/install
 
