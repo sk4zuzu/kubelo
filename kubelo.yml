@@ -5,6 +5,7 @@
     - role: bastion/openssh/configure
       delegate_to: localhost
       become: false
+      tags: [bastion]
 
 - hosts: all
   pre_tasks:

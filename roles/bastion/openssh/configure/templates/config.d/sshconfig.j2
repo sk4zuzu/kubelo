@@ -6,6 +6,14 @@ Host {{ groups.bastion | first }}
   UserKnownHostsFile /dev/null
   ForwardAgent yes
 
+Host {{ cluster_name }}-proxy
+  Hostname {{ hostvars[groups.bastion | first].ansible_host | d(groups.bastion | first) }}
+  User {{ hostvars[groups.bastion | first].ansible_user }}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ForwardAgent yes
+  LocalForward 7878 {{ groups.master | first }}:7878
+
 {% for host in (groups.etcd + groups.master + groups.compute) | unique -%}
 
 Host {{ hostvars[host].inventory_hostname }}
