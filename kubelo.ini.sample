@@ -3,6 +3,7 @@
 cluster_name=k1
 ansible_user=ubuntu
 cloud_provider=
+extra_server_cert_sans=["localhost"]
 
 [bastion]
 vpc1u ansible_host=10.69.0.10
