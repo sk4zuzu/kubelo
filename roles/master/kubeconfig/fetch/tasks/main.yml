@@ -1,0 +1,39 @@
+---
+
+- name: slurp kubeconfig
+  slurp:
+    path: /etc/kubernetes/admin.conf
+  register: slurp_admin_conf
+
+- name: parse kubeconfig
+  set_fact:
+    kubeconfig: >-
+      {{ slurp_admin_conf.content | b64decode | from_yaml }}
+
+- name: update clusters
+  set_fact:
+    kubeconfig_clusters: >-
+      {{ [kubeconfig.clusters[0] | combine(update, recursive=true)] + kubeconfig.clusters[1:] }}
+  vars:
+    update:
+      cluster:
+        server: https://localhost:7878
+
+- name: update kubeconfig
+  set_fact:
+    kubeconfig: >-
+      {{ kubeconfig | combine(update, recursive=true) }}
+  vars:
+    update:
+      clusters: >-
+        {{ kubeconfig_clusters }}
+
+- name: store kubeconfig locally
+  delegate_to: localhost
+  run_once: true
+  copy:
+    dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/kubeconfig"
+    content: >-
+      {{ kubeconfig | to_nice_yaml(indent=2) }}
+
+# vim:ts=2:sw=2:et:syn=yaml:

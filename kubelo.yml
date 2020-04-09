@@ -66,4 +66,9 @@
   roles:
     - role: master/helm/install
 
+- hosts: master[0]
+  roles:
+    - role: master/kubeconfig/fetch
+      tags: [kubeconfig]
+
 # vim:ts=2:sw=2:et:syn=yaml:
