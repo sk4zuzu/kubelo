@@ -20,4 +20,10 @@
     path: /usr/local/bin/helm
     mode: u=rwx,go=rx
 
+- name: ensure stable repo is present
+  shell: |
+    helm repo add stable \
+      https://kubernetes-charts.storage.googleapis.com
+  changed_when: false
+
 # vim:ts=2:sw=2:et:syn=yaml:
