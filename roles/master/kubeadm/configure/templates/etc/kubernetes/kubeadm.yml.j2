@@ -1,7 +1,7 @@
 ---
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
-apiEndpoint:
+localApiEndpoint:
   advertiseAddress: {{ ansible_default_ipv4.address }}
   bindPort: 6443
 nodeRegistration:
@@ -12,7 +12,8 @@ nodeRegistration:
 {% endif %}
 
 ---
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
+kubernetesVersion: v{{ kubernetes_version }}
 kind: ClusterConfiguration
 clusterName: {{ cluster_name }}
 controlPlaneEndpoint: local-lb:7878
