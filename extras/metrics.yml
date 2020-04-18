@@ -2,13 +2,12 @@
 
 - hosts: master[0]
   tasks:
-    - name: add bitnami repo
+    - name: EXTRAS | add bitnami repo
       shell: |
         helm repo add bitnami \
           https://charts.bitnami.com/bitnami
-      changed_when: false
 
-    - name: deploy metrics-server
+    - name: EXTRAS | deploy metrics-server
       shell: |
         helm upgrade --install \
           --namespace kube-system \
@@ -19,6 +18,5 @@
           --set extraArgs.kubelet-preferred-address-types=InternalIP
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      changed_when: false
 
 # vim:ts=2:sw=2:et:syn=yaml:

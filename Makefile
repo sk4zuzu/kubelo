@@ -2,19 +2,27 @@
 SELF := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 NAME ?= $(shell grep -oP '^cluster_name\s*=\s*\K\w+$$' $(SELF)/kubelo.ini)
 
+EXTRAS_TARGETS := \
+metrics \
+reboot \
+reset \
+timesync
+
 export
 
 .PHONY: all
 
 all: kubelo
 
-.PHONY: kubelo extras
+.PHONY: kubelo
 
 kubelo:
 	ansible-playbook -v kubelo.yml
 
-extras:
-	ansible-playbook -v extras.yml
+.PHONY: $(EXTRAS_TARGETS)
+
+$(EXTRAS_TARGETS):
+	ansible-playbook -v extras/$@.yml
 
 .PHONY: proxy
 

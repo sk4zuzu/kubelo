@@ -1,0 +1,57 @@
+---
+
+- hosts: master:compute
+  tasks:
+    - name: EXTRAS | reset kuberentes node
+      shell: |
+        kubeadm reset --force
+
+    - name: EXTRAS | stop services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - kubelet
+        - docker
+
+    - name: EXTRAS | cleanup cni
+      vars:
+        dirs:
+          - /etc/cni/net.d
+          - /run/flannel
+          - /var/lib/cni
+      block:
+        - file:
+            path: "{{ item }}/"
+            state: absent
+          loop: "{{ dirs }}"
+
+        - file:
+            path: "{{ item }}/"
+            state: directory
+          loop: "{{ dirs }}"
+
+- hosts: master
+  tasks:
+    - name: EXTRAS | delete /etc/kubernetes/kube-flannel.yml
+      file:
+        path: /etc/kubernetes/kube-flannel.yml
+        state: absent
+
+- hosts: etcd[0]
+  gather_facts: true
+  tasks:
+    - name: EXTRAS | delete etcd data
+      shell: |
+        etcdctl del "" --prefix
+      environment:
+        ETCDCTL_CACERT: "{{ etcd_pki }}/crt/etcd-ca.crt"
+        ETCDCTL_CERT: "{{ etcd_pki }}/crt/etcd.crt"
+        ETCDCTL_KEY: "{{ etcd_pki }}/key/etcd.key"
+        ETCDCTL_ENDPOINTS: "https://{{ ansible_default_ipv4.address }}:2379"
+      vars:
+        etcd_pki: /etc/etcd/pki
+
+- import_playbook: reboot.yml
+
+# vim:ts=2:sw=2:et:syn=yaml:

@@ -11,12 +11,18 @@
 
 - name: create local .ssh directory tree
   file:
-    path: "{{ item }}"
+    path: "{{ item }}/"
     state: directory
     mode: u+rwx,g=rx,o=
   loop:
    - "{{ playbook_dir }}/.ssh"
    - "{{ playbook_dir }}/.ssh/config.d"
+
+- name: link extras/.ssh/ to .ssh/
+  file:
+    src: ../.ssh/
+    dest: "{{ playbook_dir }}/extras/.ssh"
+    state: link
 
 - name: generate bastion ssh main config
   template:

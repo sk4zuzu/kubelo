@@ -1,0 +1,9 @@
+---
+
+- hosts: etcd:master:compute
+  tasks:
+    - name: EXTRAS | sync system time
+      shell: |
+        timedatectl set-ntp true && systemctl restart systemd-timesyncd
+
+# vim:ts=2:sw=2:et:syn=yaml:
