@@ -8,10 +8,13 @@ export
 
 all: kubelo
 
-.PHONY: kubelo
+.PHONY: kubelo extras
 
 kubelo:
 	ansible-playbook -v kubelo.yml
+
+extras:
+	ansible-playbook -v extras.yml
 
 .PHONY: proxy
 
