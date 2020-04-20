@@ -1,6 +1,8 @@
 
 SELF := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-NAME ?= $(shell grep -oP '^cluster_name\s*=\s*\K\w+$$' $(SELF)/kubelo.ini)
+
+INVENTORY ?= $(SELF)/kubelo.ini
+NAME      := $(shell grep -oP '^cluster_name\s*=\s*\K\w+$$' $(INVENTORY))
 
 EXTRAS_TARGETS := \
 metrics \
@@ -17,12 +19,12 @@ all: kubelo
 .PHONY: kubelo
 
 kubelo:
-	ansible-playbook -v kubelo.yml
+	ansible-playbook -v -i $(INVENTORY) kubelo.yml
 
 .PHONY: $(EXTRAS_TARGETS)
 
 $(EXTRAS_TARGETS):
-	ansible-playbook -v extras/$@.yml
+	ansible-playbook -v -i $(INVENTORY) extras/$@.yml
 
 .PHONY: proxy
 
