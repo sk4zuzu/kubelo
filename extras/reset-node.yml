@@ -1,0 +1,60 @@
+---
+
+- hosts: master:compute
+  gather_facts: true
+  tasks: []
+
+- hosts: "{{ lookup('env', 'TARGET') }}"
+  pre_tasks:
+    - delegate_to: "{{ groups.master.0 }}"
+      block:
+        - name: EXTRAS | drain the target node
+          shell: |
+            kubectl drain node/{{ ansible_fqdn }}
+          args:
+            executable: /bin/bash
+          environment:
+            KUBECONFIG: /etc/kubernetes/admin.conf
+
+  tasks:
+    - name: EXTRAS | reset kuberentes node
+      shell: |
+        kubeadm reset --force
+
+    - name: EXTRAS | stop services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - kubelet
+        - docker
+
+    - name: EXTRAS | cleanup cni
+      vars:
+        dirs:
+          - /etc/cni/net.d
+          - /run/flannel
+          - /var/lib/cni
+      block:
+        - file:
+            path: "{{ item }}/"
+            state: absent
+          loop: "{{ dirs }}"
+
+        - file:
+            path: "{{ item }}/"
+            state: directory
+          loop: "{{ dirs }}"
+
+  post_tasks:
+    - delegate_to: "{{ groups.master.0 }}"
+      block:
+        - name: EXTRAS | delete the target node
+          shell: |
+            kubectl delete node/{{ ansible_fqdn }}
+          args:
+            executable: /bin/bash
+          environment:
+            KUBECONFIG: /etc/kubernetes/admin.conf
+
+# vim:ts=2:sw=2:et:syn=yaml:

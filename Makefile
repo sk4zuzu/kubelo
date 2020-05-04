@@ -8,6 +8,7 @@ EXTRAS_TARGETS := \
 metrics \
 reboot \
 reset \
+reset-node \
 timesync
 
 export
