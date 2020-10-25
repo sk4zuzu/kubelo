@@ -19,12 +19,12 @@ all: kubelo
 .PHONY: kubelo
 
 kubelo:
-	ansible-playbook -v -i $(INVENTORY) kubelo.yml
+	cd $(SELF)/ && ansible-playbook -v -i $(INVENTORY) kubelo.yml
 
 .PHONY: $(EXTRAS_TARGETS)
 
 $(EXTRAS_TARGETS):
-	ansible-playbook -v -i $(INVENTORY) extras/$@.yml
+	cd $(SELF)/ && ansible-playbook -v -i $(INVENTORY) extras/$@.yml
 
 .PHONY: proxy
 
