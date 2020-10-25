@@ -1,5 +1,4 @@
 ---
-
 - name: push token/hash from local cache
   synchronize:
     mode: push
@@ -12,5 +11,3 @@
       - --include=TOKEN
       - --include=HASH
       - --exclude=*
-
-# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,5 +1,4 @@
 ---
-
 - import_tasks: "{{ playbook_dir }}/import/etcd/gather/hosts.yml"
 - import_tasks: "{{ playbook_dir }}/import/etcd/gather/fqdns.yml"
 - import_tasks: "{{ playbook_dir }}/import/etcd/gather/ipv4s.yml"
@@ -11,5 +10,3 @@
 - import_tasks: "{{ playbook_dir }}/import/compute/gather/hosts.yml"
 - import_tasks: "{{ playbook_dir }}/import/compute/gather/fqdns.yml"
 - import_tasks: "{{ playbook_dir }}/import/compute/gather/ipv4s.yml"
-
-# vim:ts=2:sw=2:et:syn=yaml:

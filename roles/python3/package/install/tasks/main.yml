@@ -1,5 +1,4 @@
 ---
-
 - name: boostrap python3 intepreter
   script: "{{ playbook_dir }}/roles/python3/package/install/templates/python3.sh"
   args:
@@ -15,5 +14,3 @@
     name:
       - pyyaml
       - openshift
-
-# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,5 +1,4 @@
 ---
-
 - hosts: master:compute
   gather_facts: true
   tasks: []
@@ -56,5 +55,3 @@
             executable: /bin/bash
           environment:
             KUBECONFIG: /etc/kubernetes/admin.conf
-
-# vim:ts=2:sw=2:et:syn=yaml:

@@ -1,5 +1,4 @@
 ---
-
 - name: ensure local cache directory
   file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
@@ -31,7 +30,7 @@
       - --include=pki/front-proxy-ca.crt
       - --include=pki/front-proxy-ca.key
       - --exclude=*
-  when: inventory_hostname == (groups.master | first)
+  when: inventory_hostname == groups.master[0]
   changed_when: false
   run_once: true
 
@@ -55,6 +54,4 @@
       local-lb:7878
   args:
     creates: /etc/kubernetes/kubelet.conf
-  when: inventory_hostname != (groups.master | first)
-
-# vim:ts=2:sw=2:et:syn=yaml:
+  when: inventory_hostname != groups.master[0]

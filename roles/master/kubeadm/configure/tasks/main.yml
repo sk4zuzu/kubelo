@@ -1,5 +1,4 @@
 ---
-
 - set_fact:
     etcd_external_endpoints: >-
       {{ (etcd_external_endpoints | d([])) + ['https://%s:2379' | format(item)] }}
@@ -20,5 +19,3 @@
   template:
     dest: /etc/profile.d/kubeconfig.sh
     src: etc/profile.d/kubeconfig.sh.j2
-
-# vim:ts=2:sw=2:et:syn=yaml:

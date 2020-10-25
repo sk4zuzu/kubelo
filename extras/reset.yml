@@ -1,5 +1,4 @@
 ---
-
 - hosts: master:compute
   tasks:
     - name: EXTRAS | reset kuberentes node
@@ -53,5 +52,3 @@
         etcd_pki: /etc/etcd/pki
 
 - import_playbook: reboot.yml
-
-# vim:ts=2:sw=2:et:syn=yaml:

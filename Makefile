@@ -1,5 +1,4 @@
-
-SELF := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+SELF := $(patsubst %/,%,$(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 
 INVENTORY ?= $(SELF)/kubelo.ini
 NAME      := $(shell grep -oP '^cluster_name\s*=\s*\K\w+$$' $(INVENTORY))
@@ -45,5 +44,3 @@ become:
 ssh-%:
 	@echo NOTICE: if you have complex hostnames use "\"ssh -F .ssh/config <tab>\"" auto-completion instead
 	@ssh -F $(SELF)/.ssh/config $* $(BECOME_ROOT)
-
-# vim:ts=4:sw=4:noet:syn=make:

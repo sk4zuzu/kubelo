@@ -1,5 +1,4 @@
 ---
-
 - name: download helm binary package
   get_url:
     url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
@@ -25,5 +24,3 @@
     helm repo add stable \
       https://kubernetes-charts.storage.googleapis.com
   changed_when: false
-
-# vim:ts=2:sw=2:et:syn=yaml:

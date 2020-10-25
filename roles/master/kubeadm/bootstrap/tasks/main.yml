@@ -1,5 +1,4 @@
 ---
-
 - stat:
     path: /etc/kubernetes/admin.conf
   register: admin_conf
@@ -43,5 +42,3 @@
         src: *flannel_yml
         namespace: kube-system
         kubeconfig: /etc/kubernetes/admin.conf
-
-# vim:ts=2:sw=2:et:syn=yaml:

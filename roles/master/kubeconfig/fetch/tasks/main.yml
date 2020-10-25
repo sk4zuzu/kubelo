@@ -1,5 +1,4 @@
 ---
-
 - name: slurp kubeconfig
   slurp:
     path: /etc/kubernetes/admin.conf
@@ -35,5 +34,3 @@
     dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/kubeconfig"
     content: >-
       {{ kubeconfig | to_nice_yaml(indent=2) }}
-
-# vim:ts=2:sw=2:et:syn=yaml:

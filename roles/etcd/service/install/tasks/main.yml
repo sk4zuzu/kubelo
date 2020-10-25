@@ -1,5 +1,4 @@
 ---
-
 - name: download etcd binary package
   get_url:
     dest: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
@@ -27,5 +26,3 @@
 - name: systemd daemon reload
   systemd:
     daemon_reload: true
-
-# vim:ts=2:sw=2:et:syn=yaml:

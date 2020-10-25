@@ -1,5 +1,4 @@
 ---
-
 - hosts: bastion
   roles:
     - role: bastion/openssh/configure
@@ -42,7 +41,7 @@
 - hosts: etcd
   roles:
     - role: etcd/openssl/bootstrap
-      when: inventory_hostname == (groups.etcd | first)
+      when: inventory_hostname == groups.etcd[0]
       run_once: true
     - role: etcd/openssl/replicate
     - role: etcd/service/install
@@ -53,7 +52,7 @@
     - role: master/kubeadm/install
     - role: master/kubeadm/configure
     - role: master/kubeadm/bootstrap
-      when: inventory_hostname == (groups.master | first)
+      when: inventory_hostname == groups.master[0]
       run_once: true
     - role: master/kubeadm/replicate
 
@@ -71,5 +70,3 @@
   roles:
     - role: master/kubeconfig/fetch
       tags: [kubeconfig]
-
-# vim:ts=2:sw=2:et:syn=yaml:

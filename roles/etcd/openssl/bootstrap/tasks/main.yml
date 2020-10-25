@@ -1,5 +1,4 @@
 ---
-
 - set_fact:
     etcd_master_fqdns: >-
       {{ (etcd_fqdns + master_fqdns) | unique | list }}
@@ -8,17 +7,17 @@
 
 - set_fact:
     subject_alt_name: >-
-      {{ ((groups.etcd + groups.master)
-      | unique
-      | map('extract', hostvars, 'inventory_hostname')
-      | map('regex_replace', '^', 'DNS:')
-      | list)
-      + (etcd_master_fqdns
-      | map('regex_replace', '^', 'DNS:')
-      | list)
-      + (etcd_master_ipv4s
-      | map('regex_replace', '^', 'IP:')
-      | list) }}
+      {{ _inventory_hostnames + _etcd_master_fqdns + _etcd_master_ipv4s }}
+  vars:
+    _inventory_hostnames: >-
+      {{ (groups.etcd + groups.master) | unique
+                                       | map('extract', hostvars, 'inventory_hostname')
+                                       | map('regex_replace', '^', 'DNS:')
+                                       | list }}
+    _etcd_master_fqdns: >-
+      {{ etcd_master_fqdns | map('regex_replace', '^', 'DNS:') | list }}
+    _etcd_master_ipv4s: >-
+      {{ etcd_master_ipv4s | map('regex_replace', '^', 'IP:') | list }}
 
 - file:
     path: "{{ item }}/"
@@ -124,5 +123,3 @@
     ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
     ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     provider: ownca
-
-# vim:ts=2:sw=2:et:syn=yaml:

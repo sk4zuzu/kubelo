@@ -1,8 +1,5 @@
 ---
-
 - hosts: master:compute
   tasks:
     - name: EXTRAS | reboot kuberentes node
       reboot:
-
-# vim:ts=2:sw=2:et:syn=yaml:

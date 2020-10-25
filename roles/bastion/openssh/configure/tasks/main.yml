@@ -1,5 +1,4 @@
 ---
-
 - assert:
     that: bastion_inventory_hostname not in forbidden_inventory_hostnames
     fail_msg: "bastion must not be a part of the cluster"
@@ -35,5 +34,3 @@
     dest: "{{ playbook_dir }}/.ssh/config.d/{{ cluster_name }}"
     src: config.d/sshconfig.j2
     mode: u=rw,g=r,o=
-
-# vim:ts=2:sw=2:et:syn=yaml:

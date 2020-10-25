@@ -1,10 +1,5 @@
 ---
-
 - name: gather master ipv4 addresses
   set_fact:
     master_ipv4s: >-
-      {{ groups.master
-      | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
-      | list }}
-
-# vim:ts=2:sw=2:et:syn=yaml:
+      {{ groups.master | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}

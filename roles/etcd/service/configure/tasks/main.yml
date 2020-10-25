@@ -1,5 +1,4 @@
 ---
-
 - set_fact:
     initial_advertise_peer_urls: "https://{{ ansible_default_ipv4.address }}:2380"
     listen_peer_urls: "https://{{ ansible_default_ipv4.address }}:2380"
@@ -21,5 +20,3 @@
     src: etc/etcd/etcd.yml.j2
   notify:
     - restart etcd
-
-# vim:ts=2:sw=2:et:syn=yaml:

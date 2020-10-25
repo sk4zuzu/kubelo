@@ -1,5 +1,4 @@
 ---
-
 - set_fact:
     backend_servers: >-
       {{ master_hosts | zip(master_ipv4s) | list }}
@@ -17,5 +16,3 @@
     regexp: " local-lb$"
     line: >-
       127.0.0.1 local-lb
-
-# vim:ts=2:sw=2:et:syn=yaml:

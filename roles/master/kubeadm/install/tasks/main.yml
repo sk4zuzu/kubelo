@@ -1,5 +1,4 @@
 ---
-
 - set_fact:
     kubernetes_version_apt: "{{ kubernetes_version }}-00"
     kubernetes_cni_version_apt: "{{ kubernetes_cni_version }}-00"
@@ -36,5 +35,3 @@
   retries: 20
   delay: 12
   changed_when: false
-
-# vim:ts=2:sw=2:et:syn=yaml:
