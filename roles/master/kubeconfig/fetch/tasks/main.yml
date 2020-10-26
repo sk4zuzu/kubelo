@@ -29,8 +29,10 @@
 
 - name: store kubeconfig locally
   delegate_to: localhost
+  become: false
   run_once: true
   copy:
     dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/kubeconfig"
+    mode: u=rw,go=
     content: >-
       {{ kubeconfig | to_nice_yaml(indent=2) }}
