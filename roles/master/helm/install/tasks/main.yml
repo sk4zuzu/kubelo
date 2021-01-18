@@ -27,5 +27,5 @@
 - name: ensure stable repo is present
   shell: |
     helm repo add stable \
-      https://kubernetes-charts.storage.googleapis.com
+      https://charts.helm.sh/stable/
   changed_when: false
