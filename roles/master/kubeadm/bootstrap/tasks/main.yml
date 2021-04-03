@@ -35,10 +35,10 @@
     - name: download flannel manifest
       get_url:
         url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-        dest: &flannel_yml /etc/kubernetes/kube-flannel.yml
+        dest: /etc/kubernetes/kube-flannel.yml
 
     - name: deploy flannel network
-      k8s:
-        src: *flannel_yml
-        namespace: kube-system
-        kubeconfig: /etc/kubernetes/admin.conf
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      command: |
+        kubectl --namespace=kube-system apply --filename=/etc/kubernetes/kube-flannel.yml
