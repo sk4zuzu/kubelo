@@ -40,5 +40,7 @@
     - name: deploy flannel network
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      command: |
-        kubectl --namespace=kube-system apply --filename=/etc/kubernetes/kube-flannel.yml
+      shell: |
+        kubectl apply \
+          --namespace=kube-system \
+          --filename=/etc/kubernetes/kube-flannel.yml
