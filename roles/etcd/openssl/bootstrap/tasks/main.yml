@@ -22,6 +22,7 @@
 - file:
     path: "{{ item }}/"
     state: directory
+    mode: u=rwx,go=
   loop:
     - /etc/etcd
     - /etc/etcd/pki
@@ -33,6 +34,7 @@
   openssl_privatekey:
     path: /etc/etcd/pki/key/etcd-ca.key
     type: RSA
+    mode: u=rw,go=
 
 - stat:
     path: /etc/etcd/pki/csr/etcd-ca.csr
@@ -49,6 +51,7 @@
       - keyEncipherment
       - keyCertSign
     common_name: etcd-ca
+    mode: u=rw,go=
   when: not etcd_ca_csr.stat.exists
 
 - name: generate self-signed etcd-ca certificate
@@ -57,11 +60,13 @@
     privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     csr_path: /etc/etcd/pki/csr/etcd-ca.csr
     provider: selfsigned
+    mode: u=rw,go=
 
 - name: generate etcd private key
   openssl_privatekey:
     path: /etc/etcd/pki/key/etcd.key
     type: RSA
+    mode: u=rw,go=
 
 - stat:
     path: /etc/etcd/pki/csr/etcd.csr
@@ -81,6 +86,7 @@
       - clientAuth
     subject_alt_name: "{{ subject_alt_name }}"
     common_name: etcd
+    mode: u=rw,go=
   when: not etcd_csr.stat.exists
 
 - name: generate signed etcd certificate
@@ -90,11 +96,13 @@
     ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
     ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     provider: ownca
+    mode: u=rw,go=
 
 - name: generate etcd-peer private key
   openssl_privatekey:
     path: /etc/etcd/pki/key/etcd-peer.key
     type: RSA
+    mode: u=rw,go=
 
 - stat:
     path: /etc/etcd/pki/csr/etcd-peer.csr
@@ -114,6 +122,7 @@
       - clientAuth
     subject_alt_name: "{{ subject_alt_name }}"
     common_name: etcd-peer
+    mode: u=rw,go=
   when: not etcd_peer_csr.stat.exists
 
 - name: generate signed etcd-peer certificate
@@ -123,3 +132,4 @@
     ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
     ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     provider: ownca
+    mode: u=rw,go=

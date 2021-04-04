@@ -3,6 +3,7 @@
   file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
     state: "{{ item }}"
+    mode: u=rwx,go=
   changed_when: false
   delegate_to: localhost
   become: false

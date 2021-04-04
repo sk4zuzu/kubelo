@@ -3,6 +3,7 @@
   get_url:
     dest: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
     url: "https://storage.googleapis.com/etcd/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+    mode: u=rw,go=
 
 - name: extract etcd binary package
   unarchive:
@@ -20,6 +21,7 @@
   template:
     dest: /etc/systemd/system/etcd.service
     src: etc/systemd/system/etcd.service.j2
+    mode: u=rw,go=
   notify:
     - restart etcd
 

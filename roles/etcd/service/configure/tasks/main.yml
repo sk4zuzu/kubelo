@@ -18,5 +18,6 @@
   template:
     dest: /etc/etcd/etcd.yml
     src: etc/etcd/etcd.yml.j2
+    mode: u=rw,go=
   notify:
     - restart etcd
