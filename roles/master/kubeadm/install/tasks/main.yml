@@ -12,6 +12,7 @@
   apt_repository:
     repo: "deb [arch=amd64] https://apt.kubernetes.io kubernetes-xenial main"
     state: present
+    mode: u=rw,go=
 
 - name: install binaries
   apt:

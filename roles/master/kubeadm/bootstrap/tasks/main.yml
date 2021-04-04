@@ -36,6 +36,7 @@
       get_url:
         url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
         dest: /etc/kubernetes/kube-flannel.yml
+        mode: u=rw,go=
 
     - name: deploy flannel network
       environment:

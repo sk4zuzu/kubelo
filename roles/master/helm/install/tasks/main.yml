@@ -9,6 +9,7 @@
       get_url:
         url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
         dest: &helm_tgz "/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+        mode: u=rw,go=
 
     - name: deploy helm
       unarchive:

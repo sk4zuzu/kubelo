@@ -14,8 +14,10 @@
   template:
     dest: /etc/kubernetes/kubeadm.yml
     src: etc/kubernetes/kubeadm.yml.j2
+    mode: u=rw,go=
 
 - name: render profile config
   template:
     dest: /etc/profile.d/kubeconfig.sh
     src: etc/profile.d/kubeconfig.sh.j2
+    mode: u=rw,go=
