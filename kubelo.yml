@@ -37,6 +37,8 @@
     - role: haproxy/service/install
     - role: haproxy/service/configure
     - role: dockerce/service/install
+  post_tasks:
+    - meta: flush_handlers
 
 - hosts: etcd
   roles:
