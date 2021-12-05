@@ -1,21 +1,45 @@
 ---
-- name: download etcd binary package
-  get_url:
-    dest: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-    url: "https://storage.googleapis.com/etcd/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-    mode: u=rw,go=
+- stat:
+    path: /usr/local/bin/etcd
+  register: stat_usr_local_bin_etcd
 
-- name: extract etcd binary package
-  unarchive:
-    dest: /usr/local/bin/
-    src: "/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-    remote_src: true
-    extra_opts:
-      - "--strip-components=1"
-      - "etcd-v{{ etcd_version }}-linux-amd64/etcd"
-      - "etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
-  notify:
-    - restart etcd
+- stat:
+    path: /usr/local/bin/etcdctl
+  register: stat_usr_local_bin_etcdctl
+
+- when: not (stat_usr_local_bin_etcd.stat.exists and stat_usr_local_bin_etcdctl.stat.exists)
+  block:
+    - name: download etcd binary package
+      get_url:
+        url: "https://storage.googleapis.com/etcd/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        dest: &etcd_tgz "/var/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        mode: u=rw,go=
+
+    - name: extract etcd binary package
+      unarchive:
+        remote_src: true
+        src: *etcd_tgz
+        dest: /usr/local/bin/
+        extra_opts:
+          - --strip-components=1
+          - "etcd-v{{ etcd_version }}-linux-amd64/etcd"
+          - "etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
+      notify:
+        - restart etcd
+
+    - name: ensure /usr/local/bin/etcd is executable
+      file:
+        path: /usr/local/bin/etcd
+        mode: u=rwx,go=rx
+      notify:
+        - restart etcd
+
+    - name: ensure /usr/local/bin/etcdctl is executable
+      file:
+        path: /usr/local/bin/etcdctl
+        mode: u=rwx,go=rx
+      notify:
+        - restart etcd
 
 - name: render etcd systemd unit
   template:
