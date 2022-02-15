@@ -21,3 +21,31 @@
   until: result is success
   retries: 20
   delay: 12
+
+- name: setup docker.io mirror
+  when: registry is defined
+  block:
+    - name: slurp /etc/docker/daemon.json
+      slurp:
+        path: /etc/docker/daemon.json
+      register: slurp_daemon_json
+
+    - name: overwrite /etc/docker/daemon.json
+      copy:
+        dest: /etc/docker/daemon.json
+        mode: u=rw,g=r
+        content: |
+          {{ _document | combine(_update, recursive=true) | to_nice_json(indent=2) }}
+      vars:
+        _document: >-
+          {{ slurp_daemon_json.content | b64decode | from_json }}
+        _update:
+          insecure-registries: ["{{ registry }}"]
+          registry-mirrors: ["{{ registry }}"]
+      register: copy_daemon_json
+
+    - name: reload docker service
+      when: copy_daemon_json is changed
+      systemd:
+        name: docker
+        state: reloaded
