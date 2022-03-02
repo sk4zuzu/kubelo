@@ -12,9 +12,12 @@
 
 - name: render kubeadm config
   template:
-    dest: /etc/kubernetes/kubeadm.yml
-    src: etc/kubernetes/kubeadm.yml.j2
+    dest: "/etc/kubernetes/{{ item }}"
+    src: "etc/kubernetes/{{ item }}.j2"
     mode: u=rw,go=
+  loop:
+    - kubeadm-scheduler.yml
+    - kubeadm.yml
 
 - name: render profile config
   template:

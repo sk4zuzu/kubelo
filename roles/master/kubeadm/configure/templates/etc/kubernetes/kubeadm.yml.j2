@@ -41,9 +41,15 @@ controllerManager:
 scheduler:
   extraArgs:
     address: 0.0.0.0
+    config: /etc/kubernetes/kubeadm-scheduler.yml
 {% if cloud_provider | d() %}
     cloud-provider: {{ cloud_provider }}
 {% endif %}
+  extraVolumes:
+  - name: config
+    hostPath: /etc/kubernetes/kubeadm-scheduler.yml
+    mountPath: /etc/kubernetes/kubeadm-scheduler.yml
+    readOnly: true
 
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
