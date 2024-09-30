@@ -1,5 +1,0 @@
----
-- hosts: master:compute
-  tasks:
-    - name: EXTRAS | reboot kuberentes node
-      reboot:

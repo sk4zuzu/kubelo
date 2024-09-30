@@ -1,12 +1,12 @@
 ---
-- import_tasks: "{{ playbook_dir }}/import/etcd/gather/hosts.yml"
-- import_tasks: "{{ playbook_dir }}/import/etcd/gather/fqdns.yml"
-- import_tasks: "{{ playbook_dir }}/import/etcd/gather/ipv4s.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/etcd/gather/hosts.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/etcd/gather/fqdns.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/etcd/gather/ipv4s.yml"
 
-- import_tasks: "{{ playbook_dir }}/import/master/gather/hosts.yml"
-- import_tasks: "{{ playbook_dir }}/import/master/gather/fqdns.yml"
-- import_tasks: "{{ playbook_dir }}/import/master/gather/ipv4s.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/master/gather/hosts.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/master/gather/fqdns.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/master/gather/ipv4s.yml"
 
-- import_tasks: "{{ playbook_dir }}/import/compute/gather/hosts.yml"
-- import_tasks: "{{ playbook_dir }}/import/compute/gather/fqdns.yml"
-- import_tasks: "{{ playbook_dir }}/import/compute/gather/ipv4s.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/compute/gather/hosts.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/compute/gather/fqdns.yml"
+- ansible.builtin.import_tasks: "{{ playbook_dir }}/import/compute/gather/ipv4s.yml"

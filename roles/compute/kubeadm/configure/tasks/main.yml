@@ -1,7 +1,7 @@
 ---
 - when: cloud_provider | d()
   block:
-    - lineinfile:
+    - ansible.builtin.lineinfile:
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: "KUBELET_KUBECONFIG_ARGS=.*--cloud-provider=[^ ]+ "
         state: absent
@@ -10,7 +10,7 @@
       check_mode: true
 
     - name: enable cloud provider
-      replace:
+      ansible.builtin.replace:
         dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: "KUBELET_KUBECONFIG_ARGS="
         replace: "KUBELET_KUBECONFIG_ARGS=--cloud-provider={{ cloud_provider }} "
@@ -18,7 +18,7 @@
 
 - when: node_labels | d()
   block:
-    - lineinfile:
+    - ansible.builtin.lineinfile:
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: "KUBELET_KUBECONFIG_ARGS=.*--node-labels=[^ ]+ "
         state: absent
@@ -27,18 +27,29 @@
       check_mode: true
 
     - name: enable node labels
-      replace:
+      ansible.builtin.replace:
         dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: "KUBELET_KUBECONFIG_ARGS="
         replace: "KUBELET_KUBECONFIG_ARGS=--node-labels={{ node_labels }} "
       when: not node_labels_result.changed
 
-- name: initialize compute nodes
-  shell: |
-    kubeadm join \
-      --node-name={{ ansible_fqdn }} \
-      --token=$(head -n1 /etc/kubernetes/TOKEN) \
-      --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
-      local-lb:7878
-  args:
-    creates: /etc/kubernetes/kubelet.conf
+- name: enable kubelet service
+  ansible.builtin.systemd_service:
+    name: kubelet
+    enabled: true
+
+- name: join compute node
+  ansible.builtin.shell:
+    creates: "{{ item.creates }}"
+    cmd: |
+      set -eu -o pipefail
+      {{ item.cmd }}
+    executable: /bin/bash
+  loop:
+    - creates: /etc/kubernetes/kubelet.conf
+      cmd: |
+        kubeadm join \
+          --node-name={{ ansible_fqdn }} \
+          --token=$(head -n1 /etc/kubernetes/TOKEN) \
+          --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
+          {{ kubevip_address }}:6443

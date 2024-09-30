@@ -1,22 +1,23 @@
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: InitConfiguration
-localApiEndpoint:
+localAPIEndpoint:
   advertiseAddress: {{ ansible_default_ipv4.address }}
   bindPort: 6443
 nodeRegistration:
   name: {{ ansible_fqdn }}
 {% if cloud_provider | d() %}
   kubeletExtraArgs:
-    cloud-provider: {{ cloud_provider }}
+  - name: cloud-provider
+    value: {{ cloud_provider }}
 {% endif %}
 
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta4
 kubernetesVersion: v{{ kubernetes_version }}
 kind: ClusterConfiguration
 clusterName: {{ cluster_name }}
-controlPlaneEndpoint: local-lb:7878
+controlPlaneEndpoint: {{ kubevip_address }}:6443
 networking:
   podSubnet: 10.244.0.0/16
 certificatesDir: /etc/kubernetes/pki/
@@ -28,23 +29,21 @@ etcd:
     keyFile: /etc/etcd/pki/key/etcd.key
 apiServer:
   certSANs: {{ (extra_server_cert_sans + api_server_cert_sans) | unique | to_json }}
-  extraArgs:
 {% if cloud_provider | d() %}
-    cloud-provider: {{ cloud_provider }}
+  extraArgs:
+  - name: cloud-provider
+    value: {{ cloud_provider }}
 {% endif %}
 controllerManager:
-  extraArgs:
-    address: 0.0.0.0
 {% if cloud_provider | d() %}
-    cloud-provider: {{ cloud_provider }}
+  extraArgs:
+  - name: cloud-provider
+    value: {{ cloud_provider }}
 {% endif %}
 scheduler:
   extraArgs:
-    address: 0.0.0.0
-    config: /etc/kubernetes/kubeadm-scheduler.yml
-{% if cloud_provider | d() %}
-    cloud-provider: {{ cloud_provider }}
-{% endif %}
+  - name: config
+    value: /etc/kubernetes/kubeadm-scheduler.yml
   extraVolumes:
   - name: config
     hostPath: /etc/kubernetes/kubeadm-scheduler.yml

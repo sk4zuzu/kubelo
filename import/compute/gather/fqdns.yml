@@ -1,5 +1,5 @@
 ---
 - name: gather compute fqdn addresses
-  set_fact:
+  ansible.builtin.set_fact:
     compute_fqdns: >-
       {{ groups.compute | map('extract', hostvars, ['ansible_fqdn']) | list }}

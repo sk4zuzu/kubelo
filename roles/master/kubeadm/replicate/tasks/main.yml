@@ -1,28 +1,34 @@
 ---
-- name: ensure local cache directory
-  file:
+- name: recreate local cache directory
+  ansible.builtin.file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
     state: "{{ item }}"
-    mode: u=rwx,go=
-  changed_when: false
+    mode: u=rwx,go=r
   delegate_to: localhost
   become: false
-  run_once: true
   loop:
     - absent
     - directory
+  changed_when: false
+  run_once: true
 
 - name: pull kubernetes pki to local cache
-  synchronize:
+  ansible.posix.synchronize:
     mode: pull
     src: /etc/kubernetes/
     dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
+    owner: false
+    group: false
     checksum: true
     use_ssh_args: true
     rsync_opts: &rsync_opts
+      - --include=super-admin.conf
       - --include=HASH
       - --include=TOKEN
       - --include=kube-flannel.yml
+      - --include=kube-flannel.yml.DONE
+      - --include=kube-vip-cloud-controller.yaml
+      - --include=kube-vip-cloud-controller.yaml.DONE
       - --include=pki/
       - --include=pki/ca.crt
       - --include=pki/ca.key
@@ -36,23 +42,36 @@
   run_once: true
 
 - name: push kubernetes pki from local cache
-  synchronize:
+  ansible.posix.synchronize:
     mode: push
     src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/kubernetes/"
     dest: /etc/kubernetes/
+    owner: false
+    group: false
     checksum: true
     times: false
     use_ssh_args: true
     rsync_opts: *rsync_opts
 
+- name: enable kubelet service
+  ansible.builtin.systemd_service:
+    name: kubelet
+    enabled: true
+
 - name: extend kuberentes control plane
-  shell: |
-    kubeadm join \
-      --node-name={{ ansible_fqdn }} \
-      --token=$(head -n1 /etc/kubernetes/TOKEN) \
-      --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
-      --control-plane \
-      local-lb:7878
-  args:
-    creates: /etc/kubernetes/kubelet.conf
+  ansible.builtin.shell:
+    creates: "{{ item.creates }}"
+    cmd: |
+      set -eu -o pipefail
+      {{ item.cmd }}
+    executable: /bin/bash
+  loop:
+    - creates: /etc/kubernetes/kubelet.conf
+      cmd: |
+        kubeadm join \
+          --node-name={{ ansible_fqdn }} \
+          --token=$(head -n1 /etc/kubernetes/TOKEN) \
+          --discovery-token-ca-cert-hash=sha256:$(head -n1 /etc/kubernetes/HASH) \
+          --control-plane \
+          {{ kubevip_address }}:6443
   when: inventory_hostname != groups.master[0]

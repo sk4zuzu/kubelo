@@ -1,26 +1,56 @@
 ---
-- set_fact:
+- ansible.builtin.set_fact:
+    cloud_provider: >-
+      {{ cloud_provider | d('') }}
+    extra_server_cert_sans: >-
+      {{ extra_server_cert_sans | d([]) }}
+    api_server_cert_sans: >-
+      {{ master_fqdns }}
     etcd_external_endpoints: >-
-      {{ (etcd_external_endpoints | d([])) + ['https://%s:2379' | format(item)] }}
-  loop: >-
-    {{ etcd_fqdns }}
+      {{ etcd_fqdns | map('regex_replace', '^(.*)$', 'https://\g<1>:2379') }}
 
-- set_fact:
-    cloud_provider: "{{ cloud_provider | d('') }}"
-    extra_server_cert_sans: "{{ extra_server_cert_sans | d([]) }}"
-    api_server_cert_sans: "{{ master_fqdns }}"
-
-- name: render kubeadm config
-  template:
-    dest: "/etc/kubernetes/{{ item }}"
-    src: "etc/kubernetes/{{ item }}.j2"
-    mode: u=rw,go=
+- name: render templates
+  ansible.builtin.template:
+    dest: "/{{ item }}"
+    src: "{{ item }}.j2"
+    owner: 0
+    group: 0
+    mode: u=rw,go=r
   loop:
-    - kubeadm-scheduler.yml
-    - kubeadm.yml
+    - etc/kubernetes/kubeadm-scheduler.yml
+    - etc/kubernetes/kubeadm.yml
+    - etc/profile.d/kubeconfig.sh
 
-- name: render profile config
-  template:
-    dest: /etc/profile.d/kubeconfig.sh
-    src: etc/profile.d/kubeconfig.sh.j2
-    mode: u=rw,go=
+- name: render kube-vip manifest
+  ansible.builtin.shell:
+    cmd: |
+      set -eu -o pipefail
+
+      if ! [[ -f "$FILEPATH" ]]; then touch "$FILEPATH"; fi
+
+      BEFORE=$(cksum "$FILEPATH")
+
+      kube-vip manifest pod \
+        --interface '{{ kubevip_interface }}' \
+        --address '{{ kubevip_address }}' \
+        --controlplane \
+        --services \
+        --arp \
+        --leaderElection \
+      | install -m u=rw,go=r -o 0 -g 0 /dev/fd/0 "$FILEPATH"
+
+      # FIXME!
+      gawk -i inplace -f- "$FILEPATH" <<'AWK'
+      { print gensub("^(\\s*path): /etc/kubernetes/admin.conf$", "\\1: /etc/kubernetes/super-admin.conf", 1) }
+      AWK
+
+      AFTER=$(cksum "$FILEPATH")
+
+      if [[ "$AFTER" != "$BEFORE" ]]; then exit 78; fi
+    executable: /bin/bash
+  environment: { FILEPATH: /etc/kubernetes/manifests/kube-vip.yaml }
+  register: shell
+  failed_when:
+    - shell.rc != 0 and shell.rc != 78
+  changed_when:
+    - shell.rc == 78 # EREMCHG "Remote address changed" 8^)

@@ -1,74 +1,89 @@
 ---
-- hosts: bastion
+- hosts: "bastion"
   roles:
     - role: bastion/openssh/configure
       delegate_to: localhost
       become: false
       tags: [bastion]
 
-- hosts: all
+- hosts: "all"
   pre_tasks:
-    - set_fact:
-        dockerce_version_apt: >-
-          {{ dockerce_version_apt | d('5:20.10.11~3-0~ubuntu-focal') }}
-        containerdio_version_apt: >-
-          {{ containerdio_version_apt | d('1.4.12-1') }}
+    - ansible.builtin.set_fact:
+        cni_plugins_version: >-
+          {{ cni_plugins_version | d('1.5.1') }}
+        containerd_version: >-
+          {{ containerd_version | d('1.7.22') }}
+        crictl_version: >-
+          {{ crictl_version | d('1.31.1') }}
         etcd_version: >-
-          {{ etcd_version | d('3.4.13') }}
-        kubernetes_version: >-
-          {{ kubernetes_version | d('1.21.7') }}
-        kubernetes_cni_version: >-
-          {{ kubernetes_cni_version | d('0.8.7') }}
+          {{ etcd_version | d('3.5.15') }}
+        flannel_version: >-
+          {{ flannel_version | d('0.25.6') }}
         helm_version: >-
-          {{ helm_version | d('3.7.1') }}
+          {{ helm_version | d('3.16.0') }}
+        kubernetes_release_version: >-
+          {{ kubernetes_release_version | d('0.17.8') }}
+        kubernetes_version: >-
+          {{ kubernetes_version | d('1.31.1') }}
+        kubevip_version: >-
+          {{ kubevip_version | d('0.8.3') }}
+        kubevip_cloud_provider_version: >-
+          {{ kubevip_cloud_provider_version | d('0.0.10') }}
+        runc_version: >-
+          {{ runc_version | d('1.1.14') }}
+      run_once: true
+      tags: [preinstall]
 
-- hosts: etcd:master:compute
+- hosts: "etcd:master:compute"
   roles:
     - role: python3/package/install
+      tags: [preinstall]
 
-- hosts: etcd:master:compute
+- hosts: "etcd:master:compute"
   gather_facts: true
   gather_subset: [network]
   roles:
     - role: network/gather
 
-- hosts: master:compute
-  roles:
-    - role: haproxy/service/install
-    - role: haproxy/service/configure
-    - role: dockerce/service/install
-  post_tasks:
-    - meta: flush_handlers
-
-- hosts: etcd
+- hosts: "etcd"
   roles:
     - role: etcd/openssl/bootstrap
       when: inventory_hostname == groups.etcd[0]
       run_once: true
     - role: etcd/openssl/replicate
     - role: etcd/service/install
+      tags: [preinstall]
     - role: etcd/service/configure
 
-- hosts: master
+- hosts: "master:compute"
+  roles:
+    - role: containerd/service/install
+      tags: [preinstall]
+    - role: containerd/service/configure
+
+- hosts: "master"
   roles:
     - role: master/kubeadm/install
+      tags: [preinstall]
     - role: master/kubeadm/configure
     - role: master/kubeadm/bootstrap
       when: inventory_hostname == groups.master[0]
       run_once: true
     - role: master/kubeadm/replicate
 
-- hosts: compute
+- hosts: "compute"
   roles:
     - role: compute/kubeadm/install
+      tags: [preinstall]
     - role: compute/kubeadm/replicate
     - role: compute/kubeadm/configure
 
-- hosts: master
+- hosts: "master"
   roles:
     - role: master/helm/install
+      tags: [preinstall]
 
-- hosts: master[0]
+- hosts: "master[0]"
   roles:
     - role: master/kubeconfig/fetch
       tags: [kubeconfig]

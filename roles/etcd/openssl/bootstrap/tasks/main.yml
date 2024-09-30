@@ -1,11 +1,11 @@
 ---
-- set_fact:
+- ansible.builtin.set_fact:
     etcd_master_fqdns: >-
       {{ (etcd_fqdns + master_fqdns) | unique | list }}
     etcd_master_ipv4s: >-
       {{ (etcd_ipv4s + master_ipv4s) | unique | list }}
 
-- set_fact:
+- ansible.builtin.set_fact:
     subject_alt_name: >-
       {{ _inventory_hostnames + _etcd_master_fqdns + _etcd_master_ipv4s }}
   vars:
@@ -19,9 +19,11 @@
     _etcd_master_ipv4s: >-
       {{ etcd_master_ipv4s | map('regex_replace', '^', 'IP:') | list }}
 
-- file:
+- ansible.builtin.file:
     path: "{{ item }}/"
     state: directory
+    owner: 0
+    group: 0
     mode: u=rwx,go=
   loop:
     - /etc/etcd
@@ -31,17 +33,19 @@
     - /etc/etcd/pki/crt
 
 - name: generate etcd-ca private key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: /etc/etcd/pki/key/etcd-ca.key
     type: RSA
+    owner: 0
+    group: 0
     mode: u=rw,go=
 
-- stat:
+- ansible.builtin.stat:
     path: /etc/etcd/pki/csr/etcd-ca.csr
   register: etcd_ca_csr
 
 - name: generate etcd-ca certificate signing request
-  openssl_csr:
+  community.crypto.openssl_csr:
     path: /etc/etcd/pki/csr/etcd-ca.csr
     privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     basic_constraints:
@@ -51,29 +55,35 @@
       - keyEncipherment
       - keyCertSign
     common_name: etcd-ca
+    owner: 0
+    group: 0
     mode: u=rw,go=
   when: not etcd_ca_csr.stat.exists
 
 - name: generate self-signed etcd-ca certificate
-  openssl_certificate:
+  community.crypto.x509_certificate:
     path: /etc/etcd/pki/crt/etcd-ca.crt
     privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     csr_path: /etc/etcd/pki/csr/etcd-ca.csr
     provider: selfsigned
+    owner: 0
+    group: 0
     mode: u=rw,go=
 
 - name: generate etcd private key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: /etc/etcd/pki/key/etcd.key
     type: RSA
+    owner: 0
+    group: 0
     mode: u=rw,go=
 
-- stat:
+- ansible.builtin.stat:
     path: /etc/etcd/pki/csr/etcd.csr
   register: etcd_csr
 
 - name: generate etcd certificate signing request
-  openssl_csr:
+  community.crypto.openssl_csr:
     path: /etc/etcd/pki/csr/etcd.csr
     privatekey_path: /etc/etcd/pki/key/etcd.key
     basic_constraints:
@@ -86,30 +96,36 @@
       - clientAuth
     subject_alt_name: "{{ subject_alt_name }}"
     common_name: etcd
+    owner: 0
+    group: 0
     mode: u=rw,go=
   when: not etcd_csr.stat.exists
 
 - name: generate signed etcd certificate
-  openssl_certificate:
+  community.crypto.x509_certificate:
     path: /etc/etcd/pki/crt/etcd.crt
     csr_path: /etc/etcd/pki/csr/etcd.csr
     ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
     ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     provider: ownca
+    owner: 0
+    group: 0
     mode: u=rw,go=
 
 - name: generate etcd-peer private key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: /etc/etcd/pki/key/etcd-peer.key
     type: RSA
+    owner: 0
+    group: 0
     mode: u=rw,go=
 
-- stat:
+- ansible.builtin.stat:
     path: /etc/etcd/pki/csr/etcd-peer.csr
   register: etcd_peer_csr
 
 - name: generate etcd-peer certificate signing request
-  openssl_csr:
+  community.crypto.openssl_csr:
     path: /etc/etcd/pki/csr/etcd-peer.csr
     privatekey_path: /etc/etcd/pki/key/etcd-peer.key
     basic_constraints:
@@ -122,14 +138,18 @@
       - clientAuth
     subject_alt_name: "{{ subject_alt_name }}"
     common_name: etcd-peer
+    owner: 0
+    group: 0
     mode: u=rw,go=
   when: not etcd_peer_csr.stat.exists
 
 - name: generate signed etcd-peer certificate
-  openssl_certificate:
+  community.crypto.x509_certificate:
     path: /etc/etcd/pki/crt/etcd-peer.crt
     csr_path: /etc/etcd/pki/csr/etcd-peer.csr
     ownca_path: /etc/etcd/pki/crt/etcd-ca.crt
     ownca_privatekey_path: /etc/etcd/pki/key/etcd-ca.key
     provider: ownca
+    owner: 0
+    group: 0
     mode: u=rw,go=

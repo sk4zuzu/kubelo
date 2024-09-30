@@ -1,32 +1,26 @@
 ---
-- stat:
-    path: /usr/local/bin/helm
-  register: stat_usr_local_bin_helm
-
-- when: not stat_usr_local_bin_helm.stat.exists
-  block:
-    - name: download helm binary package
-      get_url:
-        url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
-        dest: &helm_tgz "/var/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
-        mode: u=rw,go=
-
-    - name: extract helm binary package
-      unarchive:
-        remote_src: true
-        src: *helm_tgz
-        dest: /usr/local/bin/
-        extra_opts:
-          - --strip-components=1
-          - linux-amd64/helm
-
-    - name: ensure /usr/local/bin/helm is executable
-      file:
-        path: /usr/local/bin/helm
-        mode: u=rwx,go=rx
+- name: install binaries (unarchive)
+  ansible.builtin.unarchive:
+    creates: "{{ item.creates | d(omit) }}"
+    remote_src: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    extra_opts: "{{ item.extra_opts | d(omit) }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/helm
+      src: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+      dest: /usr/local/bin/
+      extra_opts:
+        - --strip-components=1
+        - linux-amd64/helm
+      mode: u=rwx,go=rx
 
 - name: ensure stable repo is present
-  shell: |
-    helm repo add stable \
-      https://charts.helm.sh/stable/
+  ansible.builtin.shell:
+    cmd: |
+      helm repo add stable \
+        https://charts.helm.sh/stable/
   changed_when: false

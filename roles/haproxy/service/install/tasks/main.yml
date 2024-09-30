@@ -1,9 +1,0 @@
----
-- name: install haproxy
-  apt:
-    name: haproxy
-    state: present
-  register: result
-  until: result is success
-  retries: 20
-  delay: 12

@@ -1,38 +1,103 @@
 ---
-- set_fact:
-    kubernetes_version_apt: "{{ kubernetes_version }}-00"
-    kubernetes_cni_version_apt: "{{ kubernetes_cni_version }}-00"
+- name: install system packages
+  ansible.builtin.package:
+    name: [conntrack, socat]
 
-- name: import kubernetes repository gpg key
-  apt_key:
-    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-    state: present
+- name: create directories/symlinks
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    src: "{{ item.src | d(omit) }}"
+    state: "{{ item.state | d('directory') }}"
+    force: "{{ item.force | d(omit) }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - path: /etc/kubernetes/
+      mode: u=rwx,go=rx
+    - path: /etc/kubernetes/manifests/
+      mode: u=rwx,go=rx
+    - path: /etc/systemd/system/kubelet.service.d/
+      mode: u=rwx,go=rx
+    - path: /usr/bin/kubelet
+      src: /usr/local/bin/kubelet
+      state: link
+      force: true
 
-- name: add kubernetes repository
-  apt_repository:
-    repo: "deb [arch=amd64] https://apt.kubernetes.io kubernetes-xenial main"
-    state: present
-    mode: u=rw,go=
+- name: install binaries (unarchive)
+  ansible.builtin.unarchive:
+    creates: "{{ item.creates | d(omit) }}"
+    remote_src: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    extra_opts: "{{ item.extra_opts | d(omit) }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/crictl
+      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v{{ crictl_version }}/crictl-v{{ crictl_version }}-linux-amd64.tar.gz"
+      dest: /usr/local/bin/
+      extra_opts: [crictl]
+      mode: u=rwx,go=rx
 
-- name: install binaries
-  apt:
-    name:
-      - "kubelet={{ kubernetes_version_apt }}"
-      - "kubeadm={{ kubernetes_version_apt }}"
-      - "kubectl={{ kubernetes_version_apt }}"
-      - "kubernetes-cni={{ kubernetes_cni_version_apt }}"
-    state: present
-  register: result
-  until: result is success
-  retries: 20
-  delay: 12
+- name: install binaries (uri)
+  ansible.builtin.uri:
+    creates: "{{ item.creates | d(omit) }}"
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/kubeadm
+      url: "https://dl.k8s.io/release/v{{ kubernetes_version }}/bin/linux/amd64/kubeadm"
+      dest: /usr/local/bin/
+      mode: u=rwx,go=rx
+    - creates: /usr/local/bin/kubelet
+      url: "https://dl.k8s.io/release/v{{ kubernetes_version }}/bin/linux/amd64/kubelet"
+      dest: /usr/local/bin/
+      mode: u=rwx,go=rx
+    - creates: /usr/local/bin/kubectl
+      url: "https://dl.k8s.io/release/v{{ kubernetes_version }}/bin/linux/amd64/kubectl"
+      dest: /usr/local/bin/
+      mode: u=rwx,go=rx
+    - creates: /etc/systemd/system/kubelet.service
+      url: "https://raw.githubusercontent.com/kubernetes/release/v{{ kubernetes_release_version }}/cmd/krel/templates/latest/kubelet/kubelet.service"
+      dest: /etc/systemd/system/
+      mode: u=rw,go=r
+    - creates: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+      url: "https://raw.githubusercontent.com/kubernetes/release/v{{ kubernetes_release_version }}/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf"
+      dest: /etc/systemd/system/kubelet.service.d/
+      mode: u=rw,go=r
+    - creates: /etc/kubernetes/kube-flannel.yml
+      url: "https://github.com/flannel-io/flannel/releases/download/v{{ flannel_version }}/kube-flannel.yml"
+      dest: /etc/kubernetes/
+      mode: u=rw,go=r
+    - creates: /etc/kubernetes/kube-vip-cloud-controller.yaml
+      url: "https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/v{{ kubevip_cloud_provider_version }}/manifest/kube-vip-cloud-controller.yaml"
+      dest: /etc/kubernetes/
+      mode: u=rw,go=r
 
 - name: pull docker images
-  shell: |
-    kubeadm config images pull \
-      --kubernetes-version=v{{ kubernetes_version }}
-  register: kubeadm_config_image_pull
-  until: kubeadm_config_image_pull is success
-  retries: 20
-  delay: 12
+  ansible.builtin.shell:
+    cmd: "{{ item.cmd }}"
+  loop:
+    - cmd: "kubeadm config images pull --kubernetes-version=v{{ kubernetes_version }}"
+    - cmd: "ctr image pull ghcr.io/kube-vip/kube-vip:v{{ kubevip_version }}"
+    - cmd: "ctr image pull ghcr.io/kube-vip/kube-vip-cloud-provider:v{{ kubevip_cloud_provider_version }}"
   changed_when: false
+
+- name: render templates
+  ansible.builtin.template:
+    dest: "/{{ item }}"
+    src: "{{ item }}.j2"
+    owner: 0
+    group: 0
+    mode: u=rwx,go=rx
+  loop:
+    - usr/local/bin/kube-vip
+
+- name: systemd daemon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true

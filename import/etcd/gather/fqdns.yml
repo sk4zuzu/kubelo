@@ -1,5 +1,5 @@
 ---
 - name: gather etcd fqdn addresses
-  set_fact:
+  ansible.builtin.set_fact:
     etcd_fqdns: >-
       {{ groups.etcd | map('extract', hostvars, ['ansible_fqdn']) | list }}

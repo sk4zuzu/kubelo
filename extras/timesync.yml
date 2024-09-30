@@ -1,6 +1,0 @@
----
-- hosts: etcd:master:compute
-  tasks:
-    - name: EXTRAS | sync system time
-      shell: |
-        timedatectl set-ntp true && systemctl restart systemd-timesyncd

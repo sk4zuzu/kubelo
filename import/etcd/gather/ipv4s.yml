@@ -1,5 +1,5 @@
 ---
 - name: gather etcd ipv4 addresses
-  set_fact:
+  ansible.builtin.set_fact:
     etcd_ipv4s: >-
       {{ groups.etcd | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}

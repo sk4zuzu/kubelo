@@ -1,0 +1,81 @@
+---
+- name: create directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - path: /opt/cni/
+      mode: u=rwx,go=rx
+    - path: /opt/cni/bin/
+      mode: u=rwx,go=rx
+    - path: /etc/containerd/
+      mode: u=rwx,go=rx
+
+- name: install binaries (unarchive)
+  ansible.builtin.unarchive:
+    creates: "{{ item.creates | d(omit) }}"
+    remote_src: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    extra_opts: "{{ item.extra_opts | d(omit) }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/containerd
+      src: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-static-{{ containerd_version }}-linux-amd64.tar.gz"
+      dest: /usr/local/bin/
+      extra_opts: [
+        --strip-components=1,
+        bin/containerd,
+        bin/containerd-shim, bin/containerd-shim-runc-v1, bin/containerd-shim-runc-v2,
+        bin/containerd-stress,
+        bin/ctr
+      ]
+      mode: u=rwx,go=rx
+    - creates: /opt/cni/bin/dummy
+      src: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_plugins_version }}/cni-plugins-linux-amd64-v{{ cni_plugins_version }}.tgz"
+      dest: /opt/cni/bin/
+      extra_opts: [
+        ./bandwidth, ./bridge,
+        ./dhcp, ./dummy,
+        ./firewall,
+        ./host-device, ./host-local,
+        ./ipvlan,
+        ./loopback,
+        ./macvlan,
+        ./portmap, ./ptp,
+        ./sbr, ./static,
+        ./tap, ./tuning,
+        ./vlan, ./vrf
+      ]
+      mode: u=rwx,go=rx
+  notify:
+    - restart containerd
+
+- name: install binaries (uri)
+  ansible.builtin.uri:
+    creates: "{{ item.creates | d(omit) }}"
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/runc
+      url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
+      dest: /usr/local/bin/runc
+      mode: u=rwx,go=rx
+    - creates: /etc/systemd/system/containerd.service
+      url: "https://raw.githubusercontent.com/containerd/containerd/v{{ containerd_version }}/containerd.service"
+      dest: /etc/systemd/system/
+      mode: u=rw,go=r
+  notify:
+    - restart containerd
+
+- name: systemd daemon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true

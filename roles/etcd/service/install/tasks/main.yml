@@ -1,54 +1,36 @@
 ---
-- stat:
-    path: /usr/local/bin/etcd
-  register: stat_usr_local_bin_etcd
-
-- stat:
-    path: /usr/local/bin/etcdctl
-  register: stat_usr_local_bin_etcdctl
-
-- when: not (stat_usr_local_bin_etcd.stat.exists and stat_usr_local_bin_etcdctl.stat.exists)
-  block:
-    - name: download etcd binary package
-      get_url:
-        url: "https://storage.googleapis.com/etcd/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-        dest: &etcd_tgz "/var/tmp/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-        mode: u=rw,go=
-
-    - name: extract etcd binary package
-      unarchive:
-        remote_src: true
-        src: *etcd_tgz
-        dest: /usr/local/bin/
-        extra_opts:
-          - --strip-components=1
-          - "etcd-v{{ etcd_version }}-linux-amd64/etcd"
-          - "etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
-      notify:
-        - restart etcd
-
-    - name: ensure /usr/local/bin/etcd is executable
-      file:
-        path: /usr/local/bin/etcd
-        mode: u=rwx,go=rx
-      notify:
-        - restart etcd
-
-    - name: ensure /usr/local/bin/etcdctl is executable
-      file:
-        path: /usr/local/bin/etcdctl
-        mode: u=rwx,go=rx
-      notify:
-        - restart etcd
+- name: install binaries (unarchive)
+  ansible.builtin.unarchive:
+    creates: "{{ item.creates | d(omit) }}"
+    remote_src: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    extra_opts: "{{ item.extra_opts | d(omit) }}"
+    owner: 0
+    group: 0
+    mode: "{{ item.mode | d(omit) }}"
+  loop:
+    - creates: /usr/local/bin/etcd
+      src: "https://storage.googleapis.com/etcd/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+      dest: /usr/local/bin/
+      extra_opts:
+        - --strip-components=1
+        - "etcd-v{{ etcd_version }}-linux-amd64/etcd"
+        - "etcd-v{{ etcd_version }}-linux-amd64/etcdctl"
+      mode: u=rwx,go=rx
+  notify:
+    - restart etcd
 
 - name: render etcd systemd unit
-  template:
+  ansible.builtin.template:
     dest: /etc/systemd/system/etcd.service
     src: etc/systemd/system/etcd.service.j2
-    mode: u=rw,go=
+    owner: 0
+    group: 0
+    mode: u=rw,go=r
   notify:
     - restart etcd
 
 - name: systemd daemon reload
-  systemd:
+  ansible.builtin.systemd_service:
     daemon_reload: true

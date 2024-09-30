@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v{{ kubevip_version }} vip /kube-vip "$@"

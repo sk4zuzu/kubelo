@@ -1,38 +1,29 @@
 ---
 - name: slurp kubeconfig
-  slurp:
+  ansible.builtin.slurp:
     path: /etc/kubernetes/admin.conf
-  register: slurp_admin_conf
-
-- name: parse kubeconfig
-  set_fact:
-    kubeconfig: >-
-      {{ slurp_admin_conf.content | b64decode | from_yaml }}
-
-- name: update clusters
-  set_fact:
-    kubeconfig_clusters: >-
-      {{ [kubeconfig.clusters[0] | combine(update, recursive=true)] + kubeconfig.clusters[1:] }}
-  vars:
-    update:
-      cluster:
-        server: https://localhost:7878
+  register: slurp
 
 - name: update kubeconfig
-  set_fact:
+  ansible.builtin.set_fact:
     kubeconfig: >-
-      {{ kubeconfig | combine(update, recursive=true) }}
+      {{ _document | combine(_update2, recursive=true) }}
   vars:
-    update:
-      clusters: >-
-        {{ kubeconfig_clusters }}
+    _document: >-
+      {{ slurp.content | b64decode | from_yaml }}
+    _clusters: >-
+      {{ [_document.clusters[0] | combine(_update1, recursive=true)] + _document.clusters[1:] }}
+    _update1:
+      cluster:
+        server: "https://{{ kubevip_address }}:6443"
+    _update2:
+      clusters: "{{ _clusters }}"
 
 - name: store kubeconfig locally
+  ansible.builtin.copy:
+    dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/kubeconfig"
+    mode: u=rw,go=
+    content: "{{ kubeconfig | to_nice_yaml(indent=2) }}"
   delegate_to: localhost
   become: false
   run_once: true
-  copy:
-    dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/kubeconfig"
-    mode: u=rw,go=
-    content: >-
-      {{ kubeconfig | to_nice_yaml(indent=2) }}

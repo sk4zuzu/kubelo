@@ -13,7 +13,7 @@ Deploys in ~10 minutes.
 
 ## 2. REUSE CLUSTER NODE AS A BASTION
 
-Let's say we want to reuse `k1a1` (10.30.2.10) as a bastion host `b1` (it cannot be `k1a1` used directly):
+Let's say we want to reuse `k1a1` (10.2.40.10) as a bastion host `b1` (it cannot be `k1a1` used directly):
 
 ```dosini
 [all:vars]
@@ -22,9 +22,12 @@ ansible_user=ubuntu
 cloud_provider=
 extra_server_cert_sans=["localhost"]
 ansible_python_interpreter=/usr/bin/python3
+kubevip_interface=br0
+kubevip_address=10.2.40.86
+kubevip_range_global=10.2.40.200-10.2.40.222
 
 [bastion]
-b1 ansible_host=10.30.2.10
+b1 ansible_host=10.2.40.10
 
 [etcd]
 k1a1

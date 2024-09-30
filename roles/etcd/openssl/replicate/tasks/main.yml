@@ -1,6 +1,6 @@
 ---
 - name: ensure local cache directory
-  file:
+  ansible.builtin.file:
     path: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
     state: "{{ item }}"
     mode: u=rwx,go=
@@ -13,10 +13,12 @@
     - directory
 
 - name: pull etcd pki to local cache
-  synchronize:
+  ansible.posix.synchronize:
     mode: pull
     src: /etc/etcd/
     dest: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
+    owner: false
+    group: false
     checksum: true
     use_ssh_args: true
     rsync_opts: &rsync_opts
@@ -27,10 +29,12 @@
   run_once: true
 
 - name: push etcd pki from local cache
-  synchronize:
+  ansible.posix.synchronize:
     mode: push
     src: "{{ playbook_dir }}/.tmp/{{ cluster_name }}/etc/etcd/"
     dest: /etc/etcd/
+    owner: false
+    group: false
     checksum: true
     times: false
     use_ssh_args: true

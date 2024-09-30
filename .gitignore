@@ -4,6 +4,4 @@
 .ssh/
 .tmp/
 
-/extras/.ssh
-
 /kubelo.ini

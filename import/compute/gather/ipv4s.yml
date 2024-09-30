@@ -1,5 +1,5 @@
 ---
 - name: gather compute ipv4 addresses
-  set_fact:
+  ansible.builtin.set_fact:
     compute_ipv4s: >-
       {{ groups.compute | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}

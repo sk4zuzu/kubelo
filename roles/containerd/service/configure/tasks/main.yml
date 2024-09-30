@@ -1,0 +1,26 @@
+---
+- name: generate containerd toml config
+  ansible.builtin.shell:
+    cmd: |
+      set -eu -o pipefail
+
+      if ! [[ -f "$FILEPATH" ]]; then touch "$FILEPATH"; fi
+
+      BEFORE=$(cksum "$FILEPATH")
+
+      (containerd config default | gawk -f /dev/fd/3 | install -m u=rw,go=r -o 0 -g 0 /dev/fd/0 "$FILEPATH") 3<<'AWK'
+      { print gensub("^(\\s*SystemdCgroup\\s*)=.*$", "\\1= true", 1) }
+      AWK
+
+      AFTER=$(cksum "$FILEPATH")
+
+      if [[ "$AFTER" != "$BEFORE" ]]; then exit 78; fi
+    executable: /bin/bash
+  environment: { FILEPATH: /etc/containerd/config.toml }
+  register: shell
+  failed_when:
+    - shell.rc != 0 and shell.rc != 78
+  changed_when:
+    - shell.rc == 78 # EREMCHG "Remote address changed" 8^)
+  notify:
+    - restart containerd
