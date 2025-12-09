@@ -6,7 +6,7 @@ localAPIEndpoint:
   bindPort: 6443
 nodeRegistration:
   name: {{ ansible_fqdn }}
-{% if cloud_provider | d() %}
+{% if cloud_provider | d('') is truthy %}
   kubeletExtraArgs:
   - name: cloud-provider
     value: {{ cloud_provider }}
@@ -29,13 +29,13 @@ etcd:
     keyFile: /etc/etcd/pki/key/etcd.key
 apiServer:
   certSANs: {{ (extra_server_cert_sans + api_server_cert_sans) | unique | to_json }}
-{% if cloud_provider | d() %}
+{% if cloud_provider | d('') is truthy %}
   extraArgs:
   - name: cloud-provider
     value: {{ cloud_provider }}
 {% endif %}
 controllerManager:
-{% if cloud_provider | d() %}
+{% if cloud_provider | d('') is truthy %}
   extraArgs:
   - name: cloud-provider
     value: {{ cloud_provider }}

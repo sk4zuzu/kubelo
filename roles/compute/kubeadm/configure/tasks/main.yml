@@ -1,5 +1,5 @@
 ---
-- when: cloud_provider | d()
+- when: cloud_provider | d('') is truthy
   block:
     - ansible.builtin.lineinfile:
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
@@ -16,7 +16,7 @@
         replace: "KUBELET_KUBECONFIG_ARGS=--cloud-provider={{ cloud_provider }} "
       when: not cloud_provider_result.changed
 
-- when: node_labels | d()
+- when: node_labels | d('') is truthy
   block:
     - ansible.builtin.lineinfile:
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf

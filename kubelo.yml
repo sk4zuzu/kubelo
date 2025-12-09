@@ -10,27 +10,27 @@
   pre_tasks:
     - ansible.builtin.set_fact:
         cni_plugins_version: >-
-          {{ cni_plugins_version | d('1.5.1') }}
+          {{ cni_plugins_version | d('1.9.0') }}
         containerd_version: >-
-          {{ containerd_version | d('1.7.22') }}
+          {{ containerd_version | d('2.2.0') }}
         crictl_version: >-
-          {{ crictl_version | d('1.31.1') }}
+          {{ crictl_version | d('1.34.0') }}
         etcd_version: >-
-          {{ etcd_version | d('3.5.15') }}
+          {{ etcd_version | d('3.6.6') }}
         flannel_version: >-
-          {{ flannel_version | d('0.25.6') }}
+          {{ flannel_version | d('0.27.4') }}
         helm_version: >-
-          {{ helm_version | d('3.16.0') }}
+          {{ helm_version | d('4.0.0') }}
         kubernetes_release_version: >-
-          {{ kubernetes_release_version | d('0.17.8') }}
+          {{ kubernetes_release_version | d('0.18.0') }}
         kubernetes_version: >-
-          {{ kubernetes_version | d('1.31.1') }}
+          {{ kubernetes_version | d('1.34.2') }}
         kubevip_version: >-
-          {{ kubevip_version | d('0.8.3') }}
+          {{ kubevip_version | d('1.0.2') }}
         kubevip_cloud_provider_version: >-
-          {{ kubevip_cloud_provider_version | d('0.0.10') }}
+          {{ kubevip_cloud_provider_version | d('0.0.12') }}
         runc_version: >-
-          {{ runc_version | d('1.1.14') }}
+          {{ runc_version | d('1.4.0') }}
       run_once: true
       tags: [preinstall]
 
